@@ -64,7 +64,8 @@
         <nav class="flex items-center flex-nowrap gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-inner">
           <button id="btnTabStandings" onclick="showTab('standings', this)" class="tab-btn active-tab px-3 py-2 text-xs sm:text-sm font-bold rounded-xl bg-white shadow-sm text-indigo-700 transition-all border border-slate-300 whitespace-nowrap">📊 Puan Durumu</button>
           <button onclick="showTab('upcoming', this)" class="tab-btn px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-all whitespace-nowrap">📅 Fikstür</button>
-          <button onclick="showTab('mini', this)" class="tab-btn px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-all whitespace-nowrap">🧩 Toplu Durum</button>
+          <button onclick="showTab('mini', this)" class="tab-btn px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-all whitespace-nowrap">🧩 Toplu Puan Durumu</button>
+          <button onclick="showTab('playoffs', this)" class="tab-btn px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-all whitespace-nowrap">🏆 Turlar</button>
           <button onclick="showTab('adminPanel', this)" class="tab-btn px-3 py-2 text-sm font-bold rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-all border border-slate-300" title="Yönetim Paneli">⚙️</button>
         </nav>
       </div>
@@ -117,12 +118,27 @@
       </div>
     </div>
 
+    <!-- 4. TURLAR VE BÜYÜK FİNAL (GENEL İZLEYİCİ) -->
+    <div id="playoffs" class="tab-content">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-slate-100 pb-5">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">🏆 Matematik Ligi Eleme Turları & Büyük Final</h2>
+            <p class="text-sm text-slate-500 mt-1">Grup aşamasından çıkan finalistlerin 2 maç üzerinden toplam net üstünlüğüyle gerçekleşen eleme turları.</p>
+          </div>
+          <div id="publicPlayoffRoundSelector" class="flex flex-wrap gap-2"></div>
+        </div>
+        <div id="publicPlayoffContent" class="min-h-[300px]"></div>
+      </div>
+    </div>
+
     <!-- YÖNETİM PANELİ -->
     <div id="adminPanel" class="tab-content">
       <div class="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
         <button onclick="showAdminTab('fixtures', this)" class="admin-tab-btn active font-bold text-indigo-600 px-4 py-2 border-b-2 border-indigo-600">🎮 Maç Yönetimi</button>
         <button onclick="showAdminTab('autoupload', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 border-b-2 border-transparent">🚀 Sonuç Yükleme</button>
         <button onclick="showAdminTab('dataentry', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 border-b-2 border-transparent">📥 Manuel Giriş</button>
+        <button onclick="showAdminTab('adminPlayoffs', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 border-b-2 border-transparent">🏆 Turlar Yönetimi</button>
         <button onclick="showAdminTab('setup', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 border-b-2 border-transparent">⚙️ İlk Kurulum</button>
         <button onclick="adminLogout()" class="text-xs font-bold text-red-600 hover:text-red-700 ml-auto px-3 py-1.5 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors shadow-sm">🔒 Çıkış Yap</button>
       </div>
@@ -204,7 +220,22 @@
         </div>
       </div>
 
-      <!-- 4. İLK KURULUM (KURA ÇEKİMİ) -->
+      <!-- 4. ELEMELER VE FİNAL YÖNETİMİ -->
+      <div id="adminPlayoffs" class="admin-content hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900">🏆 Eleme Aşaması & Final Yönetimi</h2>
+              <p class="text-sm text-slate-500 mt-1">Grup aşaması sonuçlarına göre çapraz eşleşmeleri başlatın, turları ve oditoryum büyük finalini yönetin.</p>
+            </div>
+            <div id="adminPlayoffControls" class="flex gap-2"></div>
+          </div>
+
+          <div id="adminPlayoffContent"></div>
+        </div>
+      </div>
+
+      <!-- 5. İLK KURULUM (KURA ÇEKİMİ) -->
       <div id="setup" class="admin-content hidden">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
           <!-- KİLİTLİ ALAN -->
@@ -366,6 +397,8 @@
       showUpcoming();
       renderMiniStandings();
       renderSetupState();
+      renderPublicPlayoffs();
+      renderAdminPlayoffs();
     }
 
     function selectGradeFromModal(grade) {
@@ -402,6 +435,8 @@
           showUpcoming();
           renderMiniStandings();
           renderSetupState();
+          renderPublicPlayoffs();
+          renderAdminPlayoffs();
         }
       }, (error) => {
         console.warn("Firebase dinleme:", error);
@@ -473,6 +508,7 @@
         btn.classList.add('active', 'font-bold', 'text-indigo-600', 'border-indigo-600');
       }
       if (adminTabId === 'fixtures') showFixtures();
+      if (adminTabId === 'adminPlayoffs') renderAdminPlayoffs();
     }
 
     const ADMIN_PASS = '26575982824.bati';
@@ -520,6 +556,7 @@
       if (tabName==='fixtures') showFixtures();
       if (tabName==='upcoming'){ fillUpcomingWeekSelect(true); showUpcoming(); } 
       if (tabName==='mini') renderMiniStandings();
+      if (tabName==='playoffs') renderPublicPlayoffs();
       if (tabName==='adminPanel') showAdminTab('fixtures');
     }
 
@@ -1278,6 +1315,874 @@
       saveData(); document.getElementById('pasteInput').value = ''; document.getElementById('previewArea').innerHTML = '';
       document.getElementById('btnApplyTop').disabled = true; document.getElementById('btnApplyTop').classList.add('btn-disabled');
       alert("✅ Sonuçlar başarıyla kaydedildi!");
+    }
+
+    // ---------- TURLAR (ELEMELER) VE BÜYÜK ODİTORYUM FİNALİ MODÜLÜ ----------
+    let activePublicPlayoffRound = 0;
+    let activeAdminPlayoffRound = 0;
+    let playoffUploadLeg = 1; // 1 = 1. Maç, 2 = 2. Maç
+
+    function getGroupRankings() {
+      const groups = Object.keys(leagueData.groups || {}).sort();
+      const rank1 = [], rank2 = [], rank3 = [], rank4 = [], rank5 = [], other = [];
+      
+      groups.forEach(g => {
+        ensureFixturesForGroup(g);
+        const standings = calculateStandings(g);
+        
+        // BOTLARI VE BAY'LERİ ELE: Botlar grubu 1. veya 2. bitirse dahi elemelere ÇIKAMAZ!
+        const realStudents = standings.filter(st => {
+          if (!st || !st.name || st.name === 'BAY') return false;
+          if (leagueData.bots && leagueData.bots.includes(normName(st.name))) return false;
+          return true;
+        });
+
+        // Yalnızca gerçek öğrenciler arasında 1., 2., 3., 4., 5. belirlenir
+        realStudents.forEach((st, i) => {
+          const rank = i + 1;
+          const studentObj = {
+            name: st.name,
+            group: g,
+            rank: rank,
+            totalNet: st.correct,
+            points: st.points,
+            won: st.won,
+            lost: st.lost,
+            goalDifference: st.goalDifference
+          };
+          if (rank === 1) rank1.push(studentObj);
+          else if (rank === 2) rank2.push(studentObj);
+          else if (rank === 3) rank3.push(studentObj);
+          else if (rank === 4) rank4.push(studentObj);
+          else if (rank === 5) rank5.push(studentObj);
+          else other.push(studentObj);
+        });
+      });
+
+      // 5.ler sıralaması: Önce toplam net (yüksek olan), eşitlikte lig puanı
+      rank5.sort((a, b) => (b.totalNet - a.totalNet) || (b.points - a.points) || (b.goalDifference - a.goalDifference));
+      
+      return { 
+        rank1, rank2, rank3, rank4, rank5, other, 
+        totalTop4: rank1.length + rank2.length + rank3.length + rank4.length,
+        groupCount: groups.length
+      };
+    }
+
+    function startPlayoffBracket() {
+      const rankings = getGroupRankings();
+      if (rankings.groupCount === 0) {
+        alert("⚠️ Henüz oluşturulmuş bir grup bulunamadı.");
+        return;
+      }
+
+      const inputVal = document.getElementById('playoffTargetCountInput')?.value;
+      const targetCount = parseInt(inputVal, 10) || 48;
+      const baseCount = rankings.totalTop4; // G * 4
+      const needWildcards = Math.max(0, targetCount - baseCount);
+      
+      const selectedRank5 = rankings.rank5.slice(0, needWildcards);
+      const allQualified = [
+        ...rankings.rank1,
+        ...rankings.rank2,
+        ...rankings.rank3,
+        ...rankings.rank4,
+        ...selectedRank5
+      ];
+
+      const N = allQualified.length;
+      const numMatches = Math.floor(N / 2);
+
+      let bottomPot = [...selectedRank5, ...rankings.rank4];
+      let middlePot = [...rankings.rank3];
+      let seeds1 = [...rankings.rank1];
+      let seeds2 = [...rankings.rank2];
+
+      const matchSlots = Array(numMatches).fill(null);
+      
+      // 1.lerin braketin farklı kollarına simetrik dağıtılması (en erken Yarı Finalde karşılaşacak şekilde)
+      const seedIndices = [];
+      for (let i = 0; i < numMatches; i++) {
+        const pos = (i * 7) % numMatches;
+        if (!seedIndices.includes(pos)) seedIndices.push(pos);
+      }
+      for (let i = 0; i < numMatches; i++) {
+        if (!seedIndices.includes(i)) seedIndices.push(i);
+      }
+
+      // 1.leri alt torba (5.ler ve 4.ler) ile farklı gruplardan çapraz eşleştir
+      let s1Idx = 0;
+      seeds1.forEach(s1 => {
+        if (s1Idx < seedIndices.length) {
+          const matchIdx = seedIndices[s1Idx];
+          let potIdx = bottomPot.findIndex(p => p.group !== s1.group);
+          if (potIdx === -1) potIdx = 0;
+          const opponent = bottomPot.splice(potIdx, 1)[0] || { name: 'BAY', group: '-', rank: 99, totalNet: 0, points: 0 };
+          matchSlots[matchIdx] = { player1: s1, player2: opponent };
+          s1Idx++;
+        }
+      });
+
+      // 2.leri 3.ler (ve kalan 4.ler) ile farklı gruplardan eşleştir
+      for (let m = 0; m < numMatches; m++) {
+        if (!matchSlots[m]) {
+          const s2 = seeds2.shift() || middlePot.shift() || bottomPot.shift() || { name: 'BAY', group: '-', rank: 99, totalNet: 0, points: 0 };
+          let pot = middlePot.length > 0 ? middlePot : bottomPot;
+          let potIdx = pot.findIndex(p => p.group !== s2.group);
+          if (potIdx === -1) potIdx = 0;
+          const opponent = pot.splice(potIdx, 1)[0] || { name: 'BAY', group: '-', rank: 99, totalNet: 0, points: 0 };
+          matchSlots[m] = { player1: s2, player2: opponent };
+        }
+      }
+
+      // 2 Maçlı Turları kur
+      const rounds = [];
+      let roundMatches = matchSlots.map((ms, idx) => ({
+        id: `p_r1_m${idx + 1}`,
+        matchNo: idx + 1,
+        player1: ms.player1,
+        player2: ms.player2,
+        m1_score1: '',
+        m1_score2: '',
+        m2_score1: '',
+        m2_score2: '',
+        winner: null,
+        tiebreakNote: ''
+      }));
+
+      rounds.push({ roundNumber: 1, title: `1. Eleme Turu (Son ${N})`, matches: roundMatches });
+
+      let nextCount = Math.floor(numMatches / 2);
+      let rNum = 2;
+      while (nextCount >= 3) {
+        let rTitle = "";
+        if (nextCount === 3) rTitle = "Yarı Final (Son 6)";
+        else if (nextCount === 6) rTitle = "Yarı Final (Son 12)";
+        else if (nextCount === 12) rTitle = "Çeyrek Final (Son 24)";
+        else rTitle = `${rNum}. Eleme Turu (Son ${nextCount * 2})`;
+
+        const nextMatches = Array.from({ length: nextCount }, (_, idx) => ({
+          id: `p_r${rNum}_m${idx + 1}`,
+          matchNo: idx + 1,
+          player1: null,
+          player2: null,
+          m1_score1: '',
+          m1_score2: '',
+          m2_score1: '',
+          m2_score2: '',
+          winner: null,
+          tiebreakNote: ''
+        }));
+        rounds.push({ roundNumber: rNum, title: rTitle, matches: nextMatches });
+
+        if (nextCount <= 6) break;
+        nextCount = Math.floor(nextCount / 2);
+        rNum++;
+      }
+
+      leagueData.playoffs = {
+        active: true,
+        targetCount: N,
+        qualifiedStudents: allQualified,
+        currentRoundIndex: 0,
+        rounds: rounds,
+        finalists: [],
+        finalScores: {}
+      };
+
+      saveData();
+      renderAdminPlayoffs();
+      renderPublicPlayoffs();
+      alert(`🏆 Elemeler başarıyla oluşturuldu! Toplam ${N} finalist 2 maç üzerinden çapraz eşleşti.`);
+    }
+
+    function calculateMatchAggregates(m) {
+      const s1_1 = (m.m1_score1 !== '' && m.m1_score1 != null) ? parseFloat(m.m1_score1) : null;
+      const s1_2 = (m.m1_score2 !== '' && m.m1_score2 != null) ? parseFloat(m.m1_score2) : null;
+      const s2_1 = (m.m2_score1 !== '' && m.m2_score1 != null) ? parseFloat(m.m2_score1) : null;
+      const s2_2 = (m.m2_score2 !== '' && m.m2_score2 != null) ? parseFloat(m.m2_score2) : null;
+
+      let agg1 = null, agg2 = null;
+      if (s1_1 !== null || s2_1 !== null) {
+        agg1 = Math.round(((s1_1 || 0) + (s2_1 || 0)) * 10) / 10;
+      }
+      if (s1_2 !== null || s2_2 !== null) {
+        agg2 = Math.round(((s1_2 || 0) + (s2_2 || 0)) * 10) / 10;
+      }
+
+      let winner = null;
+      let tiebreakNote = '';
+
+      if (m.player1 && m.player2) {
+        if (m.player1.name === 'BAY') {
+          winner = m.player2;
+        } else if (m.player2.name === 'BAY') {
+          winner = m.player1;
+        } else if (agg1 !== null && agg2 !== null && s1_1 !== null && s1_2 !== null && s2_1 !== null && s2_2 !== null) {
+          // İki maç da tamamlandıysa kazananı belirle
+          if (agg1 > agg2) {
+            winner = m.player1;
+          } else if (agg2 > agg1) {
+            winner = m.player2;
+          } else {
+            // Eşitlik durumu:
+            // 1. Gruplardaki Toplam Net sayısı
+            const p1TotalNet = m.player1.totalNet || 0;
+            const p2TotalNet = m.player2.totalNet || 0;
+            if (p1TotalNet > p2TotalNet) {
+              winner = m.player1;
+              tiebreakNote = `Toplam Net Eşit (${agg1}) -> Grup Neti Üstünlüğü (${p1TotalNet} > ${p2TotalNet})`;
+            } else if (p2TotalNet > p1TotalNet) {
+              winner = m.player2;
+              tiebreakNote = `Toplam Net Eşit (${agg2}) -> Grup Neti Üstünlüğü (${p2TotalNet} > ${p1TotalNet})`;
+            } else {
+              // 2. Gruplardaki Lig Puanı
+              const p1Points = m.player1.points || 0;
+              const p2Points = m.player2.points || 0;
+              if (p1Points > p2Points) {
+                winner = m.player1;
+                tiebreakNote = `Toplam Net & Grup Neti Eşit -> Grup Puanı Üstünlüğü (${p1Points} > ${p2Points})`;
+              } else if (p2Points > p1Points) {
+                winner = m.player2;
+                tiebreakNote = `Toplam Net & Grup Neti Eşit -> Grup Puanı Üstünlüğü (${p2Points} > ${p1Points})`;
+              } else {
+                // 3. Grup Sırası
+                winner = (m.player1.rank <= m.player2.rank) ? m.player1 : m.player2;
+                tiebreakNote = `Tüm İstatistikler Eşit -> Grup Derecesi Üstünlüğü`;
+              }
+            }
+          }
+        }
+      }
+
+      return { agg1, agg2, winner, tiebreakNote, isFullyPlayed: s1_1 !== null && s1_2 !== null && s2_1 !== null && s2_2 !== null };
+    }
+
+    function updatePlayoffScore(roundIndex, matchIndex, field, val) {
+      if (!leagueData.playoffs || !leagueData.playoffs.rounds[roundIndex]) return;
+      const match = leagueData.playoffs.rounds[roundIndex].matches[matchIndex];
+      if (match) {
+        match[field] = val === '' ? '' : parseNet(val);
+        const res = calculateMatchAggregates(match);
+        match.winner = res.winner;
+        match.tiebreakNote = res.tiebreakNote;
+        
+        // DOM'daki Toplam Net ve Kazanan göstergelerini anında canlı güncelle
+        const aggEl = document.getElementById(`admin_agg_${matchIndex}`);
+        if (aggEl) {
+          aggEl.innerText = `Toplam: ${res.agg1 !== null ? formatNet(res.agg1) : '-'} : ${res.agg2 !== null ? formatNet(res.agg2) : '-'}`;
+        }
+        
+        const tieEl = document.getElementById(`admin_tie_${matchIndex}`);
+        if (tieEl) {
+          tieEl.innerHTML = res.tiebreakNote ? `<span class="text-amber-600 bg-amber-50 px-2 py-0.5 rounded font-bold">${res.tiebreakNote}</span>` : '';
+        }
+
+        const p1El = document.getElementById(`admin_p1_${matchIndex}`);
+        const p2El = document.getElementById(`admin_p2_${matchIndex}`);
+        if (p1El && p2El && match.player1 && match.player2) {
+          const isP1Win = res.winner && res.winner.name === match.player1.name && match.player1.name !== 'Belirlenmedi';
+          const isP2Win = res.winner && res.winner.name === match.player2.name && match.player2.name !== 'Belirlenmedi';
+          p1El.className = isP1Win ? "col-span-4 text-right font-black text-emerald-700" : "col-span-4 text-right";
+          p2El.className = isP2Win ? "col-span-4 text-left font-black text-emerald-700" : "col-span-4 text-left";
+        }
+
+        saveData();
+        renderPublicPlayoffs(activePublicPlayoffRound);
+      }
+    }
+
+    // ---------- PDF / Excel ile Tur Sonuçlarını Otomatik Yükleme ----------
+    async function handlePlayoffFileUpload(ev) {
+      const file = ev.target.files?.[0];
+      if (!file) return;
+
+      const playoff = leagueData.playoffs;
+      if (!playoff || !playoff.rounds[activeAdminPlayoffRound]) {
+        alert("⚠️ Aktif tur bulunamadı.");
+        return;
+      }
+
+      const curRound = playoff.rounds[activeAdminPlayoffRound];
+      const leg = playoffUploadLeg;
+
+      try {
+        let extractedScores = {};
+        if (file.name.toLowerCase().endsWith('.pdf')) {
+          extractedScores = await extractFromPDF(file);
+        } else {
+          extractedScores = await extractFromExcel(file);
+        }
+
+        let filledCount = 0;
+
+        curRound.matches.forEach((m) => {
+          if (!m.player1 || !m.player2) return;
+          
+          // Player 1
+          if (m.player1.name && m.player1.name !== 'BAY') {
+            let s1 = extractedScores[m.player1.name];
+            if (s1 === undefined) {
+              const p1Norm = normName(m.player1.name);
+              const foundKey = Object.keys(extractedScores).find(k => k && (normName(k) === p1Norm || normName(k).includes(p1Norm) || p1Norm.includes(normName(k))));
+              if (foundKey) s1 = extractedScores[foundKey];
+            }
+            if (s1 !== undefined) {
+              if (leg === 1) m.m1_score1 = s1;
+              else m.m2_score1 = s1;
+              filledCount++;
+            }
+          }
+
+          // Player 2
+          if (m.player2.name && m.player2.name !== 'BAY') {
+            let s2 = extractedScores[m.player2.name];
+            if (s2 === undefined) {
+              const p2Norm = normName(m.player2.name);
+              const foundKey = Object.keys(extractedScores).find(k => k && (normName(k) === p2Norm || normName(k).includes(p2Norm) || p2Norm.includes(normName(k))));
+              if (foundKey) s2 = extractedScores[foundKey];
+            }
+            if (s2 !== undefined) {
+              if (leg === 1) m.m1_score2 = s2;
+              else m.m2_score2 = s2;
+              filledCount++;
+            }
+          }
+
+          const res = calculateMatchAggregates(m);
+          m.winner = res.winner;
+          m.tiebreakNote = res.tiebreakNote;
+        });
+
+        saveData();
+        renderAdminPlayoffs();
+        renderPublicPlayoffs();
+        alert(`✅ ${file.name} başarıyla işlendi!\n\n${curRound.title} aşamasındaki ${filledCount} öğrencinin ${leg}. Maç netleri sisteme kaydedildi.`);
+      } catch(err) {
+        console.error("Playoff upload error:", err);
+        alert("❌ Dosya okunurken hata oluştu: " + err.message);
+      } finally {
+        ev.target.value = '';
+      }
+    }
+
+    function advancePlayoffWinners(roundIndex) {
+      const playoff = leagueData.playoffs;
+      if (!playoff || !playoff.rounds[roundIndex]) return;
+      const currentRound = playoff.rounds[roundIndex];
+
+      const unplayed = currentRound.matches.find(m => {
+        if (!m.player1 || !m.player2) return true;
+        if (m.player1.name === 'BAY' || m.player2.name === 'BAY') return false;
+        return m.m1_score1 === '' || m.m1_score2 === '' || m.m2_score1 === '' || m.m2_score2 === '';
+      });
+
+      if (unplayed) {
+        if (!confirm("⚠️ Bu turdaki bazı maçların 1. veya 2. maç skorları henüz girilmemiş. Yine de mevcut toplam netlere göre kazananları ilerletmek istiyor musunuz?")) {
+          return;
+        }
+      }
+
+      // Kazananları belirle
+      const winners = [];
+      currentRound.matches.forEach(m => {
+        const res = calculateMatchAggregates(m);
+        m.winner = res.winner || m.player1 || m.player2;
+        m.tiebreakNote = res.tiebreakNote;
+        winners.push(m.winner);
+      });
+
+      if (roundIndex + 1 < playoff.rounds.length) {
+        const nextRound = playoff.rounds[roundIndex + 1];
+        for (let i = 0; i < nextRound.matches.length; i++) {
+          nextRound.matches[i].player1 = winners[i * 2] || null;
+          nextRound.matches[i].player2 = winners[i * 2 + 1] || null;
+          nextRound.matches[i].m1_score1 = '';
+          nextRound.matches[i].m1_score2 = '';
+          nextRound.matches[i].m2_score1 = '';
+          nextRound.matches[i].m2_score2 = '';
+          nextRound.matches[i].winner = null;
+        }
+        playoff.currentRoundIndex = roundIndex + 1;
+        activeAdminPlayoffRound = roundIndex + 1;
+        activePublicPlayoffRound = roundIndex + 1;
+        saveData();
+        renderAdminPlayoffs();
+        renderPublicPlayoffs();
+        alert(`✅ ${currentRound.title} tamamlandı! Kazananlar ${nextRound.title} aşamasına aktarıldı.`);
+      } else {
+        // Büyük Oditoryum Finali!
+        playoff.finalists = winners;
+        activeAdminPlayoffRound = playoff.rounds.length;
+        activePublicPlayoffRound = playoff.rounds.length;
+        saveData();
+        renderAdminPlayoffs();
+        renderPublicPlayoffs();
+        alert(`🎉 TEBRİKLER! ${winners.length} Finalist Oditoryum Büyük Finali sahnesine çıktı!`);
+      }
+    }
+
+    function resetPlayoffs() {
+      const pw = prompt("Elemeleri sıfırlamak için yönetici şifrenizi girin:");
+      if (pw === ADMIN_PASS) {
+        delete leagueData.playoffs;
+        activeAdminPlayoffRound = 0;
+        activePublicPlayoffRound = 0;
+        saveData();
+        renderAdminPlayoffs();
+        renderPublicPlayoffs();
+        alert("✅ Elemeler sıfırlandı. Grup aşaması üzerinden yeni eleme kurabilirsiniz.");
+      } else if (pw !== null) {
+        alert("❌ Hatalı şifre!");
+      }
+    }
+
+    function renderAdminPlayoffs() {
+      const out = document.getElementById('adminPlayoffContent');
+      const controls = document.getElementById('adminPlayoffControls');
+      if (!out) return;
+
+      const playoff = leagueData.playoffs;
+
+      if (!playoff || !playoff.active) {
+        if (controls) controls.innerHTML = '';
+        const rankings = getGroupRankings();
+        const defaultTarget = rankings.totalTop4 <= 44 ? 48 : (Math.ceil(rankings.totalTop4 / 8) * 8);
+
+        let html = `
+          <div class="space-y-8">
+            <div class="bg-indigo-50/60 p-6 rounded-2xl border border-indigo-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+              <div>
+                <h3 class="text-xl font-extrabold text-indigo-950 mb-1">Grup Aşaması Tamamlandı mı?</h3>
+                <p class="text-sm text-indigo-700">Toplam <b>${rankings.groupCount} grup</b> var. Her gruptan 4 kişi olmak üzere standart <b>${rankings.totalTop4} öğrenci</b> çıkıyor.</p>
+                <p class="text-xs text-slate-500 mt-1">Elemeler <b>2 maç üzerinden toplam net üstünlüğüyle</b> oynanacaktır.</p>
+              </div>
+              <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-indigo-200 shadow-sm">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-500 uppercase">Eleme Kontenjanı</label>
+                  <input type="number" id="playoffTargetCountInput" value="${defaultTarget}" min="${rankings.totalTop4}" max="64" step="2" class="w-24 font-black text-xl text-center bg-slate-50 border border-slate-300 rounded-lg p-1.5 outline-none focus:ring-2 focus:ring-indigo-500" oninput="renderAdminPlayoffsPreview()">
+                </div>
+                <button onclick="startPlayoffBracket()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-6 py-3.5 rounded-xl shadow-md transition-transform transform hover:-translate-y-0.5 whitespace-nowrap">
+                  🏆 Elemeleri Başlat
+                </button>
+              </div>
+            </div>
+
+            <div id="playoffRank5PreviewArea">
+              ${renderRank5PreviewHTML(rankings, defaultTarget)}
+            </div>
+          </div>`;
+        out.innerHTML = html;
+      } else {
+        // Playoff Aktif Yönetim Ekranı
+        if (controls) {
+          controls.innerHTML = `
+            <button onclick="resetPlayoffs()" class="text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-xl border border-red-200 transition-colors shadow-sm">
+              🔄 Elemeleri Sıfırla
+            </button>`;
+        }
+
+        const totalRounds = playoff.rounds.length;
+        let tabButtons = playoff.rounds.map((r, i) => `
+          <button onclick="selectAdminPlayoffRound(${i})" class="px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${activeAdminPlayoffRound === i ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+            ${r.title}
+          </button>
+        `).join('');
+
+        tabButtons += `
+          <button onclick="selectAdminPlayoffRound(${totalRounds})" class="px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${activeAdminPlayoffRound === totalRounds ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300' : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'}">
+            🌟 Büyük Oditoryum Finali
+          </button>`;
+
+        let roundContentHtml = "";
+
+        if (activeAdminPlayoffRound < totalRounds) {
+          const curRound = playoff.rounds[activeAdminPlayoffRound];
+          roundContentHtml = `
+            <div class="space-y-6">
+              <!-- Hızlı PDF/Excel Sonuç Yükleme Barı -->
+              <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-5 rounded-2xl shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <h4 class="font-black text-base flex items-center gap-2">📄 ${curRound.title} - Sonuç Yükleme</h4>
+                  <p class="text-xs text-slate-300 mt-0.5">Sınav PDF/Excel dosyasını yükleyin; 1. veya 2. maç netleri eşleşen öğrencilere otomatik işlensin.</p>
+                </div>
+                <div class="flex items-center gap-3 bg-white/10 p-2 rounded-xl border border-white/20">
+                  <div class="flex items-center bg-black/40 rounded-lg p-1">
+                    <button onclick="setPlayoffUploadLeg(1)" id="btnLeg1" class="px-3 py-1.5 rounded-md text-xs font-bold ${playoffUploadLeg === 1 ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:text-white'}">1. Maç</button>
+                    <button onclick="setPlayoffUploadLeg(2)" id="btnLeg2" class="px-3 py-1.5 rounded-md text-xs font-bold ${playoffUploadLeg === 2 ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:text-white'}">2. Maç</button>
+                  </div>
+                  <label class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black px-4 py-2 rounded-lg cursor-pointer shadow transition-transform active:scale-95 flex items-center gap-1.5">
+                    <span>Dosya Seç (PDF / Excel)</span>
+                    <input type="file" accept=".pdf, .xlsx, .xls" class="hidden" onchange="handlePlayoffFileUpload(event)">
+                  </label>
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div>
+                  <h3 class="text-lg font-black text-slate-800">${curRound.title} Eşleşmeleri (2 Maçlı Sistem)</h3>
+                  <p class="text-xs text-slate-500">Her maçta 1. Maç ve 2. Maç netlerini girin; Toplam Net otomatik hesaplanır.</p>
+                </div>
+                <button onclick="advancePlayoffWinners(${activeAdminPlayoffRound})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-2">
+                  <span>Kazananları İlerlet →</span>
+                </button>
+              </div>
+
+              <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                ${curRound.matches.map((m, mIdx) => {
+                  const p1 = m.player1 || { name: 'Belirlenmedi', group: '-', rank: '-', totalNet: 0, points: 0 };
+                  const p2 = m.player2 || { name: 'Belirlenmedi', group: '-', rank: '-', totalNet: 0, points: 0 };
+                  const agg = calculateMatchAggregates(m);
+                  const isP1Winner = agg.winner && agg.winner.name === p1.name && p1.name !== 'Belirlenmedi';
+                  const isP2Winner = agg.winner && agg.winner.name === p2.name && p2.name !== 'Belirlenmedi';
+
+                  return `
+                    <div class="bg-white p-5 rounded-2xl border ${agg.isFullyPlayed ? 'border-indigo-200 shadow-md' : 'border-slate-200 shadow-sm'} flex flex-col justify-between gap-3">
+                      <div class="flex justify-between items-center text-xs font-bold text-slate-400 pb-2 border-b border-slate-100">
+                        <span>Eşleşme #${m.matchNo}</span>
+                        <div id="admin_tie_${mIdx}">${agg.tiebreakNote ? `<span class="text-amber-600 bg-amber-50 px-2 py-0.5 rounded font-bold">${agg.tiebreakNote}</span>` : ''}</div>
+                      </div>
+
+                      <div class="grid grid-cols-12 items-center gap-3">
+                        <!-- Player 1 -->
+                        <div id="admin_p1_${mIdx}" class="col-span-4 text-right ${isP1Winner ? 'font-black text-emerald-700' : ''}">
+                          <div class="font-extrabold text-sm text-slate-800 truncate" title="${p1.name}">${p1.name}</div>
+                          <div class="text-[10px] font-semibold text-slate-400">Grup ${p1.group} (${p1.rank}.) • Net: ${formatNet(p1.totalNet)}</div>
+                        </div>
+
+                        <!-- 2 Maç Giriş Alanları & Toplam Net -->
+                        <div class="col-span-4 bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex flex-col items-center gap-1.5">
+                          <div class="flex items-center justify-center gap-1 w-full">
+                            <span class="text-[10px] font-bold text-slate-400 w-10 text-right">1. Maç:</span>
+                            <input type="number" step="0.1" value="${m.m1_score1 ?? ''}" oninput="updatePlayoffScore(${activeAdminPlayoffRound}, ${mIdx}, 'm1_score1', this.value)" placeholder="Net" class="w-12 h-7 text-center font-black text-xs bg-white border border-slate-300 rounded outline-none focus:ring-1 focus:ring-indigo-500">
+                            <span class="font-bold text-slate-300">:</span>
+                            <input type="number" step="0.1" value="${m.m1_score2 ?? ''}" oninput="updatePlayoffScore(${activeAdminPlayoffRound}, ${mIdx}, 'm1_score2', this.value)" placeholder="Net" class="w-12 h-7 text-center font-black text-xs bg-white border border-slate-300 rounded outline-none focus:ring-1 focus:ring-indigo-500">
+                          </div>
+                          <div class="flex items-center justify-center gap-1 w-full">
+                            <span class="text-[10px] font-bold text-slate-400 w-10 text-right">2. Maç:</span>
+                            <input type="number" step="0.1" value="${m.m2_score1 ?? ''}" oninput="updatePlayoffScore(${activeAdminPlayoffRound}, ${mIdx}, 'm2_score1', this.value)" placeholder="Net" class="w-12 h-7 text-center font-black text-xs bg-white border border-slate-300 rounded outline-none focus:ring-1 focus:ring-indigo-500">
+                            <span class="font-bold text-slate-300">:</span>
+                            <input type="number" step="0.1" value="${m.m2_score2 ?? ''}" oninput="updatePlayoffScore(${activeAdminPlayoffRound}, ${mIdx}, 'm2_score2', this.value)" placeholder="Net" class="w-12 h-7 text-center font-black text-xs bg-white border border-slate-300 rounded outline-none focus:ring-1 focus:ring-indigo-500">
+                          </div>
+                          <div id="admin_agg_${mIdx}" class="text-xs font-black text-indigo-700 mt-1 pt-1 border-t border-slate-200 w-full text-center">
+                            Toplam: ${agg.agg1 !== null ? formatNet(agg.agg1) : '-'} : ${agg.agg2 !== null ? formatNet(agg.agg2) : '-'}
+                          </div>
+                        </div>
+
+                        <!-- Player 2 -->
+                        <div id="admin_p2_${mIdx}" class="col-span-4 text-left ${isP2Winner ? 'font-black text-emerald-700' : ''}">
+                          <div class="font-extrabold text-sm text-slate-800 truncate" title="${p2.name}">${p2.name}</div>
+                          <div class="text-[10px] font-semibold text-slate-400">Grup ${p2.group} (${p2.rank}.) • Net: ${formatNet(p2.totalNet)}</div>
+                        </div>
+                      </div>
+                    </div>`;
+                }).join('')}
+              </div>
+            </div>`;
+        } else {
+          // Final Sahnesi
+          const finalists = playoff.finalists || [];
+          roundContentHtml = `
+            <div class="space-y-6">
+              <div class="bg-gradient-to-r from-amber-500 to-amber-600 text-white p-6 rounded-2xl shadow-lg flex justify-between items-center">
+                <div>
+                  <h3 class="text-2xl font-black">🌟 Büyük Oditoryum Final Sahnesi</h3>
+                  <p class="text-amber-100 text-sm mt-1">Tüm turları 2 maçlık seri üstünlüğüyle geçip sahnede yarışacak ${finalists.length} finalist öğrenci.</p>
+                </div>
+                <div class="text-4xl">🏆</div>
+              </div>
+
+              ${finalists.length === 0 ? `
+                <div class="p-12 text-center text-slate-400 bg-slate-50 rounded-2xl border border-slate-200">
+                  Henüz yarı final maçları tamamlanmadı. Önceki turların skorlarını girip ilerletin.
+                </div>
+              ` : `
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  ${finalists.map((f, i) => `
+                    <div class="bg-white p-6 rounded-2xl border-2 border-amber-300 shadow-md flex items-center gap-4 relative overflow-hidden">
+                      <div class="w-12 h-12 bg-amber-100 text-amber-700 font-black text-xl rounded-2xl flex items-center justify-center border border-amber-200 shadow-inner">
+                        ${i + 1}
+                      </div>
+                      <div>
+                        <h4 class="font-black text-lg text-slate-900">${f.name}</h4>
+                        <p class="text-xs font-bold text-indigo-600">Grup ${f.group} ${f.rank}.si • Grup Neti: ${formatNet(f.totalNet)}</p>
+                      </div>
+                      <div class="absolute -right-4 -bottom-4 text-6xl opacity-10">🏆</div>
+                    </div>
+                  `).join('')}
+                </div>
+              `}
+            </div>`;
+        }
+
+        out.innerHTML = `
+          <div class="space-y-6">
+            <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-4">
+              ${tabButtons}
+            </div>
+            ${roundContentHtml}
+          </div>`;
+      }
+    }
+
+    function setPlayoffUploadLeg(leg) {
+      playoffUploadLeg = leg;
+      const b1 = document.getElementById('btnLeg1');
+      const b2 = document.getElementById('btnLeg2');
+      if (b1 && b2) {
+        if (leg === 1) {
+          b1.className = "px-3 py-1.5 rounded-md text-xs font-bold bg-indigo-600 text-white";
+          b2.className = "px-3 py-1.5 rounded-md text-xs font-bold text-slate-300 hover:text-white";
+        } else {
+          b2.className = "px-3 py-1.5 rounded-md text-xs font-bold bg-indigo-600 text-white";
+          b1.className = "px-3 py-1.5 rounded-md text-xs font-bold text-slate-300 hover:text-white";
+        }
+      }
+    }
+
+    function selectAdminPlayoffRound(idx) {
+      activeAdminPlayoffRound = idx;
+      renderAdminPlayoffs();
+    }
+
+    function renderAdminPlayoffsPreview() {
+      const rankings = getGroupRankings();
+      const inputVal = document.getElementById('playoffTargetCountInput')?.value;
+      const targetCount = parseInt(inputVal, 10) || 48;
+      const area = document.getElementById('playoffRank5PreviewArea');
+      if (area) area.innerHTML = renderRank5PreviewHTML(rankings, targetCount);
+    }
+
+    function renderRank5PreviewHTML(rankings, targetCount) {
+      const baseCount = rankings.totalTop4;
+      const needWildcards = Math.max(0, targetCount - baseCount);
+
+      return `
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <h4 class="text-base font-extrabold text-slate-800">En İyi 5.ler Sıralaması (Wildcard Kontenjanı)</h4>
+              <p class="text-xs text-slate-500">Hedef kontenjana (${targetCount}) ulaşmak için <b>${needWildcards} adet en iyi 5.</b> dahil edilecektir.</p>
+            </div>
+            <span class="text-xs font-bold px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
+              ${needWildcards} Öğrenci Seçilecek
+            </span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase">
+                  <th class="py-3 px-4 w-12 text-center">Sıra</th>
+                  <th class="py-3 px-4">Öğrenci</th>
+                  <th class="py-3 px-3 text-center">Grup</th>
+                  <th class="py-3 px-3 text-center">Toplam Net</th>
+                  <th class="py-3 px-3 text-center">Puan</th>
+                  <th class="py-3 px-4 text-center">Durum</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                ${rankings.rank5.map((st, i) => {
+                  const isSelected = i < needWildcards;
+                  return `
+                    <tr class="${isSelected ? 'bg-emerald-50/70 font-semibold' : 'hover:bg-slate-50'}">
+                      <td class="py-2.5 px-4 text-center font-bold text-slate-400">${i + 1}</td>
+                      <td class="py-2.5 px-4 font-bold text-slate-800">${st.name}</td>
+                      <td class="py-2.5 px-3 text-center text-slate-600">Grup ${st.group}</td>
+                      <td class="py-2.5 px-3 text-center font-black text-indigo-700">${formatNet(st.totalNet)}</td>
+                      <td class="py-2.5 px-3 text-center font-bold text-slate-700">${st.points}</td>
+                      <td class="py-2.5 px-4 text-center">
+                        ${isSelected 
+                          ? '<span class="px-2.5 py-1 bg-emerald-600 text-white font-black text-[10px] rounded-full shadow-sm">✓ Elemelere Dahil</span>' 
+                          : '<span class="px-2 py-0.5 bg-slate-100 text-slate-400 font-medium text-[10px] rounded-full">Yedek</span>'}
+                      </td>
+                    </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    function renderPublicPlayoffs(selectedIdx) {
+      if (selectedIdx !== undefined) activePublicPlayoffRound = selectedIdx;
+      const out = document.getElementById('publicPlayoffContent');
+      const selector = document.getElementById('publicPlayoffRoundSelector');
+      if (!out) return;
+
+      const playoff = leagueData.playoffs;
+
+      if (!playoff || !playoff.active) {
+        if (selector) selector.innerHTML = '';
+        out.innerHTML = `
+          <div class="p-16 text-center bg-slate-50/70 border border-dashed border-slate-300 rounded-3xl">
+            <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 border border-indigo-100 shadow-sm">⏳</div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Grup Aşaması Devam Ediyor</h3>
+            <p class="text-sm text-slate-500 max-w-md mx-auto">Grup maçları tamamlandığında 2 maçlık eleme turları ve oditoryum büyük finali burada yayınlanacaktır.</p>
+          </div>`;
+        return;
+      }
+
+      const totalRounds = playoff.rounds.length;
+      if (selector) {
+        let btnHtml = playoff.rounds.map((r, i) => `
+          <button onclick="renderPublicPlayoffs(${i})" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${activePublicPlayoffRound === i ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+            ${r.title}
+          </button>
+        `).join('');
+
+        btnHtml += `
+          <button onclick="renderPublicPlayoffs(${totalRounds})" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${activePublicPlayoffRound === totalRounds ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300' : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'}">
+            🌟 Oditoryum Finali
+          </button>`;
+        selector.innerHTML = btnHtml;
+      }
+
+      if (activePublicPlayoffRound < totalRounds) {
+        const curRound = playoff.rounds[activePublicPlayoffRound];
+        out.innerHTML = `
+          <div class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              ${curRound.matches.map(m => {
+                const p1 = m.player1 || { name: 'Belirlenmedi', group: '-', rank: '-', totalNet: 0 };
+                const p2 = m.player2 || { name: 'Belirlenmedi', group: '-', rank: '-', totalNet: 0 };
+                const agg = calculateMatchAggregates(m);
+
+                const hasM1_1 = m.m1_score1 !== '' && m.m1_score1 != null;
+                const hasM1_2 = m.m1_score2 !== '' && m.m1_score2 != null;
+                const hasM1 = hasM1_1 && hasM1_2;
+
+                const hasM2_1 = m.m2_score1 !== '' && m.m2_score1 != null;
+                const hasM2_2 = m.m2_score2 !== '' && m.m2_score2 != null;
+                const hasM2 = hasM2_1 && hasM2_2;
+
+                const isFullyPlayed = agg.isFullyPlayed;
+                const isP1Win = agg.winner && agg.winner.name === p1.name && p1.name !== 'Belirlenmedi';
+                const isP2Win = agg.winner && agg.winner.name === p2.name && p2.name !== 'Belirlenmedi';
+
+                // 1. Maç durum rozetleri
+                let p1Badge = '', p2Badge = '';
+                let p1CardClass = 'bg-slate-50 border border-slate-200';
+                let p2CardClass = 'bg-slate-50 border border-slate-200';
+
+                if (isFullyPlayed) {
+                  // İki maç da bitti: Tur Atlayan / Elenen
+                  if (isP1Win) {
+                    p1Badge = '<span class="text-xs font-black text-emerald-700 bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-lg flex items-center gap-1">🟢 Tur Atladı ✓</span>';
+                    p2Badge = '<span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">Elendi</span>';
+                    p1CardClass = 'bg-emerald-50/90 border-2 border-emerald-400 shadow-sm';
+                    p2CardClass = 'bg-slate-50/60 border border-slate-200 opacity-60';
+                  } else if (isP2Win) {
+                    p2Badge = '<span class="text-xs font-black text-emerald-700 bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-lg flex items-center gap-1">🟢 Tur Atladı ✓</span>';
+                    p1Badge = '<span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">Elendi</span>';
+                    p2CardClass = 'bg-emerald-50/90 border-2 border-emerald-400 shadow-sm';
+                    p1CardClass = 'bg-slate-50/60 border border-slate-200 opacity-60';
+                  }
+                } else if (hasM1) {
+                  // Yalnızca 1. maç oynandı: Önde / Geride / Berabere
+                  const s1 = parseFloat(m.m1_score1);
+                  const s2 = parseFloat(m.m1_score2);
+
+                  if (s1 > s2) {
+                    p1Badge = '<span class="text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-md flex items-center gap-1">🟢 1. Maç Önde</span>';
+                    p2Badge = '<span class="text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md flex items-center gap-1">🔴 1. Maç Geride</span>';
+                    p1CardClass = 'bg-emerald-50/60 border border-emerald-200';
+                    p2CardClass = 'bg-rose-50/40 border border-rose-100';
+                  } else if (s2 > s1) {
+                    p2Badge = '<span class="text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-md flex items-center gap-1">🟢 1. Maç Önde</span>';
+                    p1Badge = '<span class="text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md flex items-center gap-1">🔴 1. Maç Geride</span>';
+                    p2CardClass = 'bg-emerald-50/60 border border-emerald-200';
+                    p1CardClass = 'bg-rose-50/40 border border-rose-100';
+                  } else {
+                    p1Badge = '<span class="text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-md flex items-center gap-1">🟡 1. Maç Berabere</span>';
+                    p2Badge = '<span class="text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-md flex items-center gap-1">🟡 1. Maç Berabere</span>';
+                    p1CardClass = 'bg-amber-50/50 border border-amber-200';
+                    p2CardClass = 'bg-amber-50/50 border border-amber-200';
+                  }
+                } else {
+                  p1Badge = '<span class="text-[11px] font-semibold text-slate-400">Bekliyor</span>';
+                  p2Badge = '<span class="text-[11px] font-semibold text-slate-400">Bekliyor</span>';
+                }
+
+                return `
+                  <div class="bg-white p-5 rounded-2xl border ${isFullyPlayed ? 'border-indigo-100 shadow-md' : 'border-slate-200 shadow-sm'} transition-all flex flex-col justify-between">
+                    <div class="flex justify-between items-center text-xs font-bold text-slate-400 mb-3 pb-2 border-b border-slate-100">
+                      <span>Eşleşme #${m.matchNo}</span>
+                      ${isFullyPlayed 
+                        ? '<span class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md font-bold">Tamamlandı ✓</span>' 
+                        : (hasM1 ? '<span class="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md font-bold">1. Maç Tamamlandı</span>' : '<span class="text-slate-400">Oynanacak</span>')}
+                    </div>
+
+                    <div class="space-y-3">
+                      <!-- Player 1 Card -->
+                      <div class="p-3.5 rounded-xl transition-all ${p1CardClass}">
+                        <div class="flex justify-between items-center">
+                          <div>
+                            <div class="font-extrabold text-sm text-slate-800">${p1.name}</div>
+                            <div class="text-[10px] text-slate-400 font-semibold">Grup ${p1.group} (${p1.rank}.)</div>
+                          </div>
+                          <div>${p1Badge}</div>
+                        </div>
+                      </div>
+
+                      <!-- Player 2 Card -->
+                      <div class="p-3.5 rounded-xl transition-all ${p2CardClass}">
+                        <div class="flex justify-between items-center">
+                          <div>
+                            <div class="font-extrabold text-sm text-slate-800">${p2.name}</div>
+                            <div class="text-[10px] text-slate-400 font-semibold">Grup ${p2.group} (${p2.rank}.)</div>
+                          </div>
+                          <div>${p2Badge}</div>
+                        </div>
+                      </div>
+
+                      ${agg.tiebreakNote && isFullyPlayed ? `
+                        <div class="text-[10px] font-bold text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-200 text-center">
+                          ⚖️ ${agg.tiebreakNote}
+                        </div>
+                      ` : ''}
+                    </div>
+                  </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+      } else {
+        // Büyük Oditoryum Finali
+        const finalists = playoff.finalists || [];
+        out.innerHTML = `
+          <div class="space-y-8">
+            <div class="bg-gradient-to-r from-amber-500 via-amber-600 to-indigo-700 text-white p-8 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden">
+              <div>
+                <span class="bg-white/20 text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">Büyük Sahne</span>
+                <h3 class="text-3xl font-black mt-2">🌟 Oditoryum Matematik Ligi Finalistleri</h3>
+                <p class="text-amber-100 text-sm mt-1 max-w-xl">Zorlu 2 maçlık eleme serilerini geçerek büyük sahnede yarışmaya hak kazanan şampiyon adayları!</p>
+              </div>
+              <div class="text-6xl drop-shadow-lg">🏆</div>
+            </div>
+
+            ${finalists.length === 0 ? `
+              <div class="p-16 text-center text-slate-400 bg-slate-50 rounded-3xl border border-slate-200">
+                Finalistler belirlenmek üzere! Eleme turları devam ediyor.
+              </div>
+            ` : `
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                ${finalists.map((f, i) => `
+                  <div class="bg-white p-6 rounded-3xl border-2 border-amber-300 shadow-lg hover:shadow-xl transition-all flex items-center gap-4 relative overflow-hidden group">
+                    <div class="w-14 h-14 bg-gradient-to-br from-amber-400 to-amber-500 text-white font-black text-2xl rounded-2xl flex items-center justify-center shadow-md transform group-hover:scale-105 transition-transform">
+                      ${i + 1}
+                    </div>
+                    <div>
+                      <h4 class="font-black text-lg text-slate-900">${f.name}</h4>
+                      <p class="text-xs font-extrabold text-indigo-600">Grup ${f.group} ${f.rank}.si • Grup Neti: ${formatNet(f.totalNet)}</p>
+                      <span class="inline-block mt-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">Oditoryum Finalisti</span>
+                    </div>
+                    <div class="absolute -right-4 -bottom-4 text-7xl opacity-5">🏆</div>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>`;
+      }
     }
 
     // ---------- INIT ----------
