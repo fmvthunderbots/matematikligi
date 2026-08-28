@@ -225,7 +225,7 @@
             </div>
             <div class="flex items-end gap-2">
               <button id="btnPreview" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2.5 rounded-lg font-semibold shadow-sm" onclick="previewFromPaste()">Önizle</button>
-              <button id="btnApplyTop" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2.5 rounded-lg font-semibold shadow-sm btn-disabled" disabled onclick="applyFromTop()">Kaydet</button>
+              <button id="btnApplyTop" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2.5 rounded-lg font-semibold shadow-sm btn-disabled" disabled onclick="window.applyFromTop()">Kaydet</button>
             </div>
           </div>
           <textarea id="pasteInput" rows="8" class="w-full bg-slate-50 border border-slate-300 text-slate-700 rounded-xl p-4 font-mono text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="ÖĞRENCİ ADI[TAB]PUAN"></textarea>
@@ -613,6 +613,7 @@
       if (tabName==='playoffs') renderPublicPlayoffs();
       if (tabName==='adminPanel') showAdminTab('fixtures');
     }
+    window.showTab = showTab;
 
     // ---------- Fikstür ----------
     function generateFixtures(group){
@@ -1281,14 +1282,14 @@
           if (weekData.matches.length > 0) matchCards += groupHtml;
         });
 
-        latestAutoUploadUpdates = updates;
+        window.latestAutoUploadUpdates = updates;
 
         previewArea.innerHTML = `
           <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 mb-6 shadow-sm">
             <h3 class="text-indigo-900 font-bold text-lg mb-2">📊 Önizleme Raporu (Net Puanlar)</h3>
             <p class="text-indigo-700 font-medium">Sistem bu haftaki <b>${totalExpected}</b> oyuncudan <b>${foundCount}</b> tanesinin net sonucunu buldu (Botlar otomatik eklendi).</p>
             ${foundCount < totalExpected ? `<p class="text-red-600 font-bold text-sm mt-2">⚠️ Bulunamayan isimler kırmızı ile işaretlendi.</p>` : `<p class="text-emerald-600 font-bold text-sm mt-2">✅ Bütün öğrenciler eksiksiz bulundu!</p>`}
-            <button id="btnAutoApply" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-md transition-all cursor-pointer" onclick="applyAutoUpload()">Sonuçları Aktar</button>
+            <button id="btnAutoApply" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-md transition-all cursor-pointer" onclick="window.applyAutoUpload()">Sonuçları Aktar</button>
           </div>
           ${matchCards}
         `;
@@ -1299,30 +1300,38 @@
       labelEl.innerHTML = originalText; event.target.value = '';
     }
 
-    let latestAutoUploadUpdates = [];
+    window.latestAutoUploadUpdates = [];
 
-    function applyAutoUpload() {
-      if (!latestAutoUploadUpdates || latestAutoUploadUpdates.length === 0) {
+    window.applyAutoUpload = function() {
+      if (!window.latestAutoUploadUpdates || window.latestAutoUploadUpdates.length === 0) {
         alert("⚠️ Aktarılacak sonuç bulunamadı.");
         return;
       }
-      latestAutoUploadUpdates.forEach(u => {
-        if (!leagueData.results[u.matchId]) leagueData.results[u.matchId] = {};
-        if (u.homeScore !== '') leagueData.results[u.matchId].homeScore = parseNet(u.homeScore);
-        if (u.awayScore !== '') leagueData.results[u.matchId].awayScore = parseNet(u.awayScore);
-      });
-      saveData();
-      alert("✅ Net sonuçlar başarıyla sisteme aktarıldı ve puan durumu güncellendi!");
-      document.getElementById('autoPreviewArea').innerHTML = '';
-      
-      const btnStandings = document.getElementById('btnTabStandings');
-      showTab('standings', btnStandings);
-      
-      const selS = document.getElementById('standingsGroupSelect');
-      if (selS && selS.options.length > 1){ selS.selectedIndex = 1; showStandings(); }
-      renderMiniStandings();
-    }
-
+      try {
+        if (!leagueData.results) leagueData.results = {};
+        window.latestAutoUploadUpdates.forEach(u => {
+          if (!leagueData.results[u.matchId]) leagueData.results[u.matchId] = {};
+          if (u.homeScore !== undefined && u.homeScore !== '') leagueData.results[u.matchId].homeScore = parseNet(u.homeScore);
+          if (u.awayScore !== undefined && u.awayScore !== '') leagueData.results[u.matchId].awayScore = parseNet(u.awayScore);
+        });
+        saveData();
+        alert("✅ Net sonuçlar başarıyla sisteme aktarıldı ve puan durumu güncellendi!");
+        document.getElementById('autoPreviewArea').innerHTML = '';
+        
+        // Yenile ve Aktif Sekmeyi Güncelle
+        const selS = document.getElementById('standingsGroupSelect');
+        if (selS && selS.options.length > 1){ selS.selectedIndex = 1; showStandings(); }
+        renderMiniStandings();
+        showFixtures();
+        
+        // Puan Durumu Sekmesine Geç
+        const btnStandings = document.getElementById('btnTabStandings');
+        if (btnStandings && typeof window.showTab === 'function') window.showTab('standings', btnStandings);
+      } catch (err) {
+        console.error("Save Error:", err);
+        alert("❌ Kayıt sırasında hata oluştu: " + err.message);
+      }
+    };
     // ---------- MANUAL DATA ENTRY ----------
     let pendingUpdates = [];
     function previewFromPaste(){
@@ -1369,7 +1378,8 @@
       }
     }
 
-    function applyFromTop(){
+    window.applyFromTop = function() {
+      if (!leagueData.results) leagueData.results = {};
       pendingUpdates.forEach(u => {
         if (!leagueData.results[u.id]) leagueData.results[u.id] = {};
         if (u.hs !== undefined) leagueData.results[u.id].homeScore = parseNet(u.hs);
@@ -1378,7 +1388,7 @@
       saveData(); document.getElementById('pasteInput').value = ''; document.getElementById('previewArea').innerHTML = '';
       document.getElementById('btnApplyTop').disabled = true; document.getElementById('btnApplyTop').classList.add('btn-disabled');
       alert("✅ Sonuçlar başarıyla kaydedildi!");
-    }
+    };
 
     // ---------- TURLAR (ELEMELER) VE BÜYÜK ODİTORYUM FİNALİ MODÜLÜ ----------
     let activePublicPlayoffRound = 0;
