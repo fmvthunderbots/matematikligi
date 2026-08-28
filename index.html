@@ -19,7 +19,14 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
   <style>
-    body { font-family: 'Inter', sans-serif; }
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background-color: #f8fafc;
+      background-image: linear-gradient(rgba(248, 250, 252, 0.88), rgba(248, 250, 252, 0.88)), url('https://i.imgur.com/y65pM0O.png');
+      background-repeat: repeat;
+      background-size: 850px auto;
+      background-attachment: fixed;
+    }
     .tab-content { display: none; animation: fadeIn 0.4s ease-out; }
     .tab-content.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -33,25 +40,32 @@
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+<body class="text-slate-800 min-h-screen flex flex-col">
 
   <header class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex flex-col lg:flex-row justify-between items-center py-4 gap-4">
         
-        <div class="flex items-center gap-4">
-          <div class="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-3 rounded-xl text-2xl shadow-lg transform -rotate-3">🏆</div>
-          <div>
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Matematik Ligi</h1>
-            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">Yönetim Paneli</p>
+        <div class="flex items-center gap-3">
+          <img src="https://i.imgur.com/DhSBHG1.png" alt="Okul Logosu" class="h-12 w-auto object-contain drop-shadow-sm transition-transform hover:scale-105" />
+          <div class="leading-tight">
+            <span id="headerGradeText" class="text-xs font-black text-indigo-600 uppercase tracking-wider block">6. SINIFLAR</span>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">MATEMATİK LİGİ</h1>
           </div>
         </div>
+
+        <!-- Sınıf Değiştirici -->
+        <div class="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-inner">
+          <button id="btnGrade5" onclick="switchGrade(5)" class="grade-btn px-3 py-1.5 text-xs sm:text-sm font-bold rounded-xl text-slate-600 hover:text-slate-900 transition-all">5. Sınıf</button>
+          <button id="btnGrade6" onclick="switchGrade(6)" class="grade-btn px-3 py-1.5 text-xs sm:text-sm font-bold rounded-xl bg-indigo-600 text-white shadow-sm transition-all">6. Sınıf</button>
+          <button id="btnGrade7" onclick="switchGrade(7)" class="grade-btn px-3 py-1.5 text-xs sm:text-sm font-bold rounded-xl text-slate-600 hover:text-slate-900 transition-all">7. Sınıf</button>
+        </div>
         
-        <nav class="flex flex-wrap justify-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shadow-inner">
-          <button id="btnTabStandings" onclick="showTab('standings', this)" class="tab-btn active-tab px-4 py-2 text-sm font-bold rounded-xl bg-white shadow-sm text-indigo-700 transition-all border border-slate-300">📊 Puan Durumu</button>
-          <button onclick="showTab('upcoming', this)" class="tab-btn px-4 py-2 text-sm font-semibold rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-all">📅 Fikstür</button>
-          <button onclick="showTab('mini', this)" class="tab-btn px-4 py-2 text-sm font-semibold rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-all">🧩 Toplu Puan Durumu</button>
-          <button onclick="showTab('adminPanel', this)" class="tab-btn px-4 py-2 text-sm font-bold rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-all ml-4 border border-slate-300">⚙️ Yönetim Paneli</button>
+        <nav class="flex items-center flex-nowrap gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-inner">
+          <button id="btnTabStandings" onclick="showTab('standings', this)" class="tab-btn active-tab px-3 py-2 text-xs sm:text-sm font-bold rounded-xl bg-white shadow-sm text-indigo-700 transition-all border border-slate-300 whitespace-nowrap">📊 Puan Durumu</button>
+          <button onclick="showTab('upcoming', this)" class="tab-btn px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-all whitespace-nowrap">📅 Fikstür</button>
+          <button onclick="showTab('mini', this)" class="tab-btn px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-all whitespace-nowrap">🧩 Toplu Durum</button>
+          <button onclick="showTab('adminPanel', this)" class="tab-btn px-3 py-2 text-sm font-bold rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-all border border-slate-300" title="Yönetim Paneli">⚙️</button>
         </nav>
       </div>
     </div>
@@ -98,8 +112,7 @@
     <!-- 3. Toplu Puan Durumu -->
     <div id="mini" class="tab-content">
       <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
-        <h2 class="text-2xl font-bold text-slate-900 mb-2">Toplu Puan Durumu</h2>
-        <p class="text-sm text-slate-500 mb-8">Tüm grupların ilk 4 mücadelesini tek ekrandan takip edin.</p>
+        <h2 class="text-2xl font-bold text-slate-900 mb-6">Toplu Puan Durumu</h2>
         <div id="miniContent" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
       </div>
     </div>
@@ -261,10 +274,37 @@
     </div>
   </main>
 
+  <!-- Sınıf Seçim Karşılama Modalı (İlk Girişte) -->
+  <div id="gradeWelcomeModal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-100 text-center transform transition-all">
+      <img src="https://i.imgur.com/DhSBHG1.png" alt="Okul Logosu" class="h-20 w-auto mx-auto mb-4 object-contain drop-shadow-md" />
+      <h3 class="text-2xl font-extrabold text-slate-900 mb-2">Matematik Ligi</h3>
+      <p class="text-slate-500 mb-8 text-sm font-medium">Lütfen takip etmek veya yönetmek istediğiniz sınıfı seçin:</p>
+      
+      <div class="grid grid-cols-1 gap-3">
+        <button onclick="selectGradeFromModal(5)" class="w-full py-3.5 px-6 rounded-2xl font-extrabold text-base bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 transition-all border border-slate-200 shadow-sm flex items-center justify-between group">
+          <span>📘 5. Sınıflar</span>
+          <span class="text-slate-400 group-hover:text-white font-bold">Giriş →</span>
+        </button>
+        <button onclick="selectGradeFromModal(6)" class="w-full py-3.5 px-6 rounded-2xl font-extrabold text-base bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 transition-all border border-slate-200 shadow-sm flex items-center justify-between group">
+          <span>📙 6. Sınıflar</span>
+          <span class="text-slate-400 group-hover:text-white font-bold">Giriş →</span>
+        </button>
+        <button onclick="selectGradeFromModal(7)" class="w-full py-3.5 px-6 rounded-2xl font-extrabold text-base bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 transition-all border border-slate-200 shadow-sm flex items-center justify-between group">
+          <span>📗 7. Sınıflar</span>
+          <span class="text-slate-400 group-hover:text-white font-bold">Giriş →</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // ---------- Core Depolama & Firebase Realtime Database ----------
-    const STORAGE_KEY = 'mathLeagueData6';
+    // ---------- Çoklu Sınıf & Firebase Realtime Database ----------
+    let currentGrade = localStorage.getItem('mathLeagueSelectedGrade') || '6';
     let leagueData = { groups: {}, fixtures: {}, results: {}, matchIndex: {}, bots: [] };
+    
+    function getStorageKey() { return 'mathLeagueData_grade_' + currentGrade; }
+    function getFirebaseRef() { return (typeof db !== 'undefined' && db) ? db.ref('leagueData_grade_' + currentGrade) : null; }
     function normName(s){ return !s ? '' : s.replace(/\u00A0/g,' ').normalize('NFKC').trim().replace(/\s+/g,' ').toLocaleUpperCase('tr-TR'); }
 
     // Firebase Canlı Veritabanı Yapılandırması
@@ -284,10 +324,59 @@
       if (typeof firebase !== 'undefined') {
         firebase.initializeApp(firebaseConfig);
         db = firebase.database();
-        leagueRef = db.ref('leagueData');
+        leagueRef = getFirebaseRef();
       }
     } catch(e) {
       console.warn("Firebase başlatma uyarısı:", e);
+    }
+
+    function switchGrade(grade) {
+      currentGrade = String(grade);
+      localStorage.setItem('mathLeagueSelectedGrade', currentGrade);
+      
+      const gradeTextEl = document.getElementById('headerGradeText');
+      if (gradeTextEl) gradeTextEl.innerText = `${currentGrade}. SINIFLAR`;
+      
+      [5, 6, 7].forEach(g => {
+        const btn = document.getElementById('btnGrade' + g);
+        if (btn) {
+          if (String(g) === currentGrade) {
+            btn.className = "grade-btn active-grade px-3 py-1.5 text-xs sm:text-sm font-bold rounded-xl bg-indigo-600 text-white shadow-sm transition-all";
+          } else {
+            btn.className = "grade-btn px-3 py-1.5 text-xs sm:text-sm font-bold rounded-xl text-slate-600 hover:text-slate-900 transition-all";
+          }
+        }
+      });
+
+      if (leagueRef) leagueRef.off();
+      leagueRef = getFirebaseRef();
+      initFirebaseSync();
+
+      loadData();
+      Object.keys(leagueData.groups || {}).forEach(g => { ensureFixturesForGroup(g); buildMatchIndex(g); });
+      populateGroupSelects();
+      createDownloadableBackup();
+      
+      const selS = document.getElementById('standingsGroupSelect');
+      if (selS && selS.options.length > 1) selS.selectedIndex = 1;
+      else if (selS) selS.selectedIndex = 0;
+      
+      showStandings();
+      fillUpcomingWeekSelect(true);
+      showUpcoming();
+      renderMiniStandings();
+      renderSetupState();
+    }
+
+    function selectGradeFromModal(grade) {
+      document.getElementById('gradeWelcomeModal').classList.add('hidden');
+      switchGrade(grade);
+    }
+
+    function checkGradeModal() {
+      if (!localStorage.getItem('mathLeagueSelectedGrade')) {
+        document.getElementById('gradeWelcomeModal').classList.remove('hidden');
+      }
     }
 
     // Canlı Bulut Senkronizasyonu
@@ -302,7 +391,7 @@
             ensureFixturesForGroup(g);
             buildMatchIndex(g);
           });
-          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(leagueData)); } catch(e){}
+          try { localStorage.setItem(getStorageKey(), JSON.stringify(leagueData)); } catch(e){}
           populateGroupSelects();
           createDownloadableBackup();
           
@@ -326,7 +415,7 @@
       let a = document.getElementById('downloadBackup');
       if (!a) { a = document.createElement('a'); a.id = 'downloadBackup'; a.style.display = 'none'; document.body.appendChild(a); }
       a.href = URL.createObjectURL(dataBlob);
-      a.download = `matematik_ligi_yedek_${new Date().toISOString().slice(0,10)}.json`;
+      a.download = `matematik_ligi_${currentGrade}_sinif_yedek_${new Date().toISOString().slice(0,10)}.json`;
     }
     function downloadBackup(){ const a=document.getElementById('downloadBackup'); if(a) a.click(); }
     function restoreFromFile(ev){
@@ -351,7 +440,7 @@
 
     function saveData(){ 
       try { 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(leagueData)); 
+        localStorage.setItem(getStorageKey(), JSON.stringify(leagueData)); 
         createDownloadableBackup(); 
       } catch(e){}
       
@@ -364,7 +453,8 @@
     }
 
     function loadData(){
-      const saved = localStorage.getItem(STORAGE_KEY);
+      leagueData = { groups: {}, fixtures: {}, results: {}, matchIndex: {}, bots: [] };
+      const saved = localStorage.getItem(getStorageKey());
       if (saved) { try { leagueData = { matchIndex:{}, bots:[], ...JSON.parse(saved) }; } catch(e){} }
       if (!leagueData.bots) leagueData.bots = [];
     }
@@ -538,7 +628,7 @@
                 const isBot = leagueData.bots && leagueData.bots.includes(normName(t.name));
                 return `<tr class="hover:bg-slate-50 transition-colors ${i<4?'qualified-row':''}">
                   <td class="py-3 px-4 text-center font-bold text-slate-400 ${i<4?'border-l-4 border-emerald-500':''}">${i+1}</td>
-                  <td class="py-3 px-4 font-semibold text-slate-800">${t.name} ${isBot ? '<span class="text-xl" title="Yapay Zeka Bot Oyuncu">🤖</span>' : ''}</td>
+                  <td class="py-3 px-4 font-semibold text-slate-800">${t.name}</td>
                   <td class="py-3 px-3 text-center text-slate-600">${t.played}</td>
                   <td class="py-3 px-3 text-center font-medium text-emerald-600">${t.won}</td>
                   <td class="py-3 px-3 text-center font-medium text-amber-500">${t.drawn}</td>
@@ -569,13 +659,13 @@
               <div class="space-y-3">
                 ${week.matches.map(m=>`
                   <div class="flex items-center gap-3 bg-white border border-slate-200 p-3 rounded-lg shadow-sm hover:border-indigo-300 transition-colors">
-                    <div class="flex-1 text-right font-semibold text-slate-700 text-sm leading-tight">${m.home} ${leagueData.bots.includes(normName(m.home))?'🤖':''}</div>
+                    <div class="flex-1 text-right font-semibold text-slate-700 text-sm leading-tight">${m.home}</div>
                     <div class="flex items-center gap-1 bg-slate-50 rounded-md p-1 border border-slate-200">
                       <input type="number" step="0.1" value="${leagueData.results[m.id]?.homeScore ?? ''}" oninput="updateScore('${m.id}','homeScore',this.value)" class="w-14 h-8 text-center bg-white border border-slate-300 rounded text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
                       <span class="text-slate-400 font-bold">:</span>
                       <input type="number" step="0.1" value="${leagueData.results[m.id]?.awayScore ?? ''}" oninput="updateScore('${m.id}','awayScore',this.value)" class="w-14 h-8 text-center bg-white border border-slate-300 rounded text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
                     </div>
-                    <div class="flex-1 text-left font-semibold text-slate-700 text-sm leading-tight">${leagueData.bots.includes(normName(m.away))?'🤖':''} ${m.away}</div>
+                    <div class="flex-1 text-left font-semibold text-slate-700 text-sm leading-tight">${m.away}</div>
                   </div>
                 `).join('')}
               </div>
@@ -700,7 +790,7 @@
               <tbody class="divide-y divide-slate-100">
                 ${S.map((t,i)=>`<tr class="${i<4?'bg-emerald-50/50':'bg-white'} hover:bg-slate-50 transition-colors">
                   <td class="px-3 py-2 text-center font-bold ${i<4?'text-emerald-600':'text-slate-400'}">${i+1}</td>
-                  <td class="px-3 py-2 font-semibold text-slate-700 truncate max-w-[120px]" title="${t.name}">${t.name} ${leagueData.bots.includes(normName(t.name))?'🤖':''}</td>
+                  <td class="px-3 py-2 font-semibold text-slate-700 truncate max-w-[120px]" title="${t.name}">${t.name}</td>
                   <td class="px-2 py-2 text-center text-slate-500">${t.played}</td>
                   <td class="px-2 py-2 text-center font-black text-indigo-700">${t.points}</td></tr>`).join('')}
               </tbody></table></div></div>`;
@@ -1192,15 +1282,9 @@
 
     // ---------- INIT ----------
     document.addEventListener('DOMContentLoaded', ()=>{
-      loadData();
-      Object.keys(leagueData.groups || {}).forEach(g=>{ ensureFixturesForGroup(g); buildMatchIndex(g); });
-      populateGroupSelects(); createDownloadableBackup();
-      const selS=document.getElementById('standingsGroupSelect');
-      if (selS && selS.options.length>1){ selS.selectedIndex=1; showStandings(); }
-      fillUpcomingWeekSelect(true); showUpcoming(); renderMiniStandings();
+      switchGrade(currentGrade);
+      checkGradeModal();
       if (document.getElementById('setupStudentList')) calculateSetup();
-      renderSetupState();
-      initFirebaseSync();
     });
   </script>
   <a id="downloadBackup" style="display:none"></a>
