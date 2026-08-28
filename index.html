@@ -82,7 +82,6 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div>
             <h2 class="text-2xl font-bold text-slate-900">Lig Puan Durumu</h2>
-            <p class="text-sm text-slate-500 mt-1">Grubun anlık sıralamasını ve detaylı istatistiklerini görün.</p>
           </div>
           <div class="w-full sm:w-64">
             <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Grup Seçimi</label>
@@ -126,7 +125,7 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-slate-100 pb-5">
           <div>
             <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">🏆 Matematik Ligi Eleme Turları & Büyük Final</h2>
-            <p class="text-sm text-slate-500 mt-1">Grup aşamasından çıkan finalistlerin 2 maç üzerinden toplam net üstünlüğüyle gerçekleşen eleme turları.</p>
+            <p class="text-sm text-slate-500 mt-1">Grup aşamasından çıkan öğrencilerin 2 maç üzerinden toplam net üstünlüğüyle gerçekleşen eleme turları.</p>
           </div>
           <div id="publicPlayoffRoundSelector" class="flex flex-wrap gap-2"></div>
         </div>
@@ -138,9 +137,8 @@
     <div id="adminPanel" class="tab-content">
       <!-- Bulut Yayın Çubuğu -->
       <div class="mb-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-3.5 sm:p-4 rounded-2xl shadow-md flex flex-col sm:flex-row justify-between items-center gap-3">
-        <div class="flex items-center gap-2.5">
-          <span id="cloudStatusDot" class="w-3 h-3 rounded-full bg-emerald-400"></span>
-          <span id="cloudStatusText" class="text-xs sm:text-sm font-bold text-slate-200">🟢 Bulut Senkronizasyonu Aktif</span>
+        <div class="flex items-center gap-2">
+          <span id="cloudStatusText" class="text-xs sm:text-sm font-bold text-emerald-300">🟢 Bulut Senkronizasyonu Aktif</span>
         </div>
         <div class="flex items-center gap-2">
           <button onclick="publishToCloud()" class="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs sm:text-sm font-black px-4 py-2 rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
@@ -428,15 +426,12 @@
     }
 
     function updateCloudStatus(isOnline, errMsg) {
-      const dot = document.getElementById('cloudStatusDot');
       const txt = document.getElementById('cloudStatusText');
-      if (dot && txt) {
+      if (txt) {
         if (isOnline) {
-          dot.className = "w-3 h-3 rounded-full bg-emerald-400";
           txt.innerHTML = `🟢 Bulut Senkronizasyonu Aktif (${currentGrade}. Sınıf)`;
           txt.className = "text-xs sm:text-sm font-bold text-emerald-300";
         } else {
-          dot.className = "w-3 h-3 rounded-full bg-rose-500 animate-ping";
           txt.innerHTML = `🔴 Bulut İzni Kapalı (Kurallar: read/write true yapılmalı)`;
           txt.className = "text-xs sm:text-sm font-bold text-rose-300";
         }
@@ -735,7 +730,7 @@
           </table>
         </div>
         <div class="mt-4 flex items-center gap-2 text-xs font-medium text-emerald-600 bg-emerald-50 inline-flex px-3 py-1.5 rounded-lg border border-emerald-100">
-          <div class="w-2 h-2 rounded-full bg-emerald-500"></div> Yeşil alan: Sonraki tura çıkan ilk 4 öğrenci
+          <div class="w-2 h-2 rounded-full bg-emerald-500"></div> Yeşil alan: Gruptan çıkacak öğrenciler
         </div>`;
       renderMiniStandings();
     }
