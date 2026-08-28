@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Matematik Ligi</title>
-  <link rel="icon" type="image/png" href="https://i.imgur.com/h3GxMAP.png">
-  <link rel="apple-touch-icon" href="https://i.imgur.com/h3GxMAP.png">
+  <link rel="icon" type="image/png" href="https://i.imgur.com/baJkVT0.png">
+  <link rel="apple-touch-icon" href="https://i.imgur.com/baJkVT0.png">
   <script src="https://cdn.tailwindcss.com"></script>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -49,7 +49,7 @@
       <div class="flex flex-col lg:flex-row justify-between items-center py-4 gap-4">
         
         <div class="flex items-center gap-3">
-          <img src="https://i.imgur.com/DhSBHG1.png" alt="Okul Logosu" class="h-12 w-auto object-contain drop-shadow-sm transition-transform hover:scale-105" />
+          <img src="https://i.imgur.com/baJkVT0.png" alt="Okul Logosu" class="h-12 w-auto object-contain drop-shadow-sm transition-transform hover:scale-105" />
           <div class="leading-tight">
             <span id="headerGradeText" class="text-xs font-black text-indigo-600 uppercase tracking-wider block">6. SINIFLAR</span>
             <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">MATEMATİK LİGİ</h1>
@@ -147,13 +147,13 @@
         </div>
       </div>
 
-      <div class="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
-        <button onclick="showAdminTab('fixtures', this)" class="admin-tab-btn active font-bold text-indigo-600 px-4 py-2 border-b-2 border-indigo-600">🎮 Maç Yönetimi</button>
-        <button onclick="showAdminTab('autoupload', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 border-b-2 border-transparent">🚀 Sonuç Yükleme</button>
-        <button onclick="showAdminTab('dataentry', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 border-b-2 border-transparent">📥 Manuel Giriş</button>
-        <button onclick="showAdminTab('adminPlayoffs', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 border-b-2 border-transparent">🏆 Turlar Yönetimi</button>
-        <button onclick="showAdminTab('setup', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 border-b-2 border-transparent">⚙️ İlk Kurulum</button>
-        <button onclick="showAdminTab('settings', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 border-b-2 border-transparent">⚙️ Ayarlar</button>
+      <div class="bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-sm border border-slate-200 mb-6 flex flex-wrap items-center gap-1">
+        <button onclick="showAdminTab('autoupload', this)" class="admin-tab-btn active font-bold text-indigo-600 px-4 py-2 bg-indigo-50 rounded-xl">🚀 Sonuç Yükleme</button>
+        <button onclick="showAdminTab('fixtures', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">🎮 Maç Yönetimi</button>
+        <button onclick="showAdminTab('dataentry', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">📥 Manuel Giriş</button>
+        <button onclick="showAdminTab('adminPlayoffs', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">🏆 Turlar Yönetimi</button>
+        <button onclick="showAdminTab('setup', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">⚙️ İlk Kurulum</button>
+        <button onclick="showAdminTab('settings', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">⚙️ Ayarlar</button>
         <button onclick="adminLogout()" class="text-xs font-bold text-red-600 hover:text-red-700 ml-auto px-3 py-1.5 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors shadow-sm">🔒 Çıkış Yap</button>
       </div>
 
@@ -327,6 +327,31 @@
              <span id="bgOpacityVal" class="font-mono font-bold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-lg">88% (Standart)</span>
           </div>
           <button onclick="saveBgOpacity()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-3 rounded-xl shadow-md transition-all">Kaydet ve Yayınla</button>
+          
+          <div class="mt-12 border-t border-slate-200 pt-10">
+            <h2 class="text-2xl font-bold text-slate-900 mb-2">📩 Otomatik Bilgilendirme Sistemi</h2>
+            <p class="text-slate-600 mb-6 max-w-4xl">Sitedeki veriler güncellendiğinde tüm zümre öğretmenlerine tek tıkla otomatik e-posta gönderin. Sistem, gizliliği korumak için adresleri BCC'ye ekler.</p>
+            
+            <div class="bg-blue-50 border border-blue-200 p-6 rounded-2xl mb-6 shadow-sm">
+              <label class="font-bold text-blue-900 block mb-2">Kayıtlı Öğretmen E-Posta Adresleri (Virgülle ayırın):</label>
+              <textarea id="teacherEmails" rows="3" class="w-full bg-white border border-blue-300 rounded-xl p-4 font-mono text-sm focus:ring-2 focus:ring-blue-500 outline-none mb-4" placeholder="ornek1@fmvisik.k12.tr, ornek2@fmvisik.k12.tr"></textarea>
+              <div class="flex flex-wrap gap-3">
+                <button onclick="saveTeacherEmails()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-sm transition-all">💾 E-Posta Listesini Kaydet</button>
+                <button onclick="sendNotificationEmail()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2">
+                   <span>✉️ Güncellemeyi Öğretmenlere Bildir (Mail At)</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+              <label class="font-bold text-slate-700 block mb-3">Gidecek Örnek Mesaj Şablonu:</label>
+              <div class="text-sm font-mono text-slate-600 whitespace-pre-wrap leading-relaxed">Merhaba arkadaşlar,
+Matematik Ligi sistemindeki veriler güncellenmiştir. 
+Portal üzerinden inceleyebilirsiniz.
+İyi çalışmalar.</div>
+            </div>
+          </div>
+
         </div>
       </div>
       
@@ -336,7 +361,7 @@
   <!-- Sınıf Seçim Karşılama Modalı (İlk Girişte) -->
   <div id="gradeWelcomeModal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-100 text-center transform transition-all">
-      <img src="https://i.imgur.com/DhSBHG1.png" alt="Okul Logosu" class="h-20 w-auto mx-auto mb-4 object-contain drop-shadow-md" />
+      <img src="https://i.imgur.com/baJkVT0.png" alt="Okul Logosu" class="h-20 w-auto mx-auto mb-4 object-contain drop-shadow-md" />
       <h3 class="text-2xl font-extrabold text-slate-900 mb-2">Matematik Ligi</h3>
       <p class="text-slate-500 mb-8 text-sm font-medium">Lütfen takip etmek veya yönetmek istediğiniz sınıfı seçin:</p>
       
@@ -567,6 +592,9 @@
         document.getElementById('bgOpacitySlider').value = op;
         document.getElementById('bgOpacityVal').innerText = op + '%';
       }
+      if (document.getElementById('teacherEmails')) {
+        document.getElementById('teacherEmails').value = leagueData.teacherEmails || '';
+      }
     }
 
     // ---------- UI Tab Kontrolleri ----------
@@ -575,12 +603,15 @@
       document.getElementById(adminTabId).classList.remove('hidden');
       
       document.querySelectorAll('.admin-tab-btn').forEach(b=>{
-        b.classList.remove('active', 'font-bold', 'text-indigo-600', 'border-indigo-600');
-        b.classList.add('font-semibold', 'text-slate-500', 'border-transparent');
+        b.classList.remove('active', 'font-bold', 'text-indigo-600', 'bg-indigo-50');
+        b.classList.add('font-semibold', 'text-slate-500');
       });
+      if (!btn) {
+        btn = Array.from(document.querySelectorAll('.admin-tab-btn')).find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes(adminTabId));
+      }
       if(btn) {
-        btn.classList.remove('font-semibold', 'text-slate-500', 'border-transparent');
-        btn.classList.add('active', 'font-bold', 'text-indigo-600', 'border-indigo-600');
+        btn.classList.remove('font-semibold', 'text-slate-500');
+        btn.classList.add('active', 'font-bold', 'text-indigo-600', 'bg-indigo-50');
       }
       if (adminTabId === 'fixtures') showFixtures();
       if (adminTabId === 'adminPlayoffs') renderAdminPlayoffs();
@@ -632,7 +663,7 @@
       if (tabName==='upcoming'){ fillUpcomingWeekSelect(true); showUpcoming(); } 
       if (tabName==='mini') renderMiniStandings();
       if (tabName==='playoffs') renderPublicPlayoffs();
-      if (tabName==='adminPanel') showAdminTab('fixtures');
+      if (tabName==='adminPanel') showAdminTab('autoupload');
     }
     window.showTab = showTab;
 
@@ -2297,6 +2328,25 @@
       leagueData.bgOpacity = val;
       saveData();
       alert("✅ Arka plan şeffaflık ayarı başarıyla kaydedildi! Sitenizi ziyaret eden herkes için bu görünüm geçerli olacaktır.");
+    };
+
+    window.saveTeacherEmails = function() {
+      const emails = document.getElementById('teacherEmails').value.trim();
+      leagueData.teacherEmails = emails;
+      saveData();
+      alert("✅ E-Posta listesi başarıyla kaydedildi!");
+    };
+
+    window.sendNotificationEmail = function() {
+      const emails = document.getElementById('teacherEmails').value.trim();
+      if (!emails) {
+        alert("⚠️ Lütfen önce e-posta adreslerini yazıp kaydedin.");
+        return;
+      }
+      const subject = encodeURIComponent(`Matematik Ligi (${currentGrade}. Sınıflar) - Sistem Güncellemesi`);
+      const body = encodeURIComponent(`Merhaba arkadaşlar,\nMatematik Ligi sistemindeki veriler güncellenmiştir.\nPortal üzerinden inceleyebilirsiniz.\nİyi çalışmalar.`);
+      
+      window.location.href = `mailto:?bcc=${encodeURIComponent(emails)}&subject=${subject}&body=${body}`;
     };
   </script>
   <a id="downloadBackup" style="display:none"></a>
