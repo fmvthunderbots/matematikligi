@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Matematik Ligi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .tab-content { display: none; animation: fadeIn 0.4s ease-out; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .qualified-row td { background-color: #f0fdf4 !important; }
+    .flash { animation: flash 1.2s ease-out 1; }
+    @keyframes flash { from { background:#fef08a; } to { background:transparent; } }
+    .btn-disabled { opacity:.5; cursor:not-allowed; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col lg:flex-row justify-between items-center py-4 gap-4">
+        
+        <div class="flex items-center gap-4">
+          <div class="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-3 rounded-xl text-2xl shadow-lg transform -rotate-3">🏆</div>
+          <div>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Matematik Ligi</h1>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">Yönetim Paneli</p>
+          </div>
+        </div>
+        
+        <nav class="flex flex-wrap justify-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shadow-inner">
+          <button id="btnTabStandings" onclick="showTab('standings', this)" class="tab-btn active-tab px-4 py-2 text-sm font-bold rounded-xl bg-white shadow-sm text-indigo-700 transition-all border border-slate-300">📊 Puan Durumu</button>
+          <button onclick="showTab('upcoming', this)" class="tab-btn px-4 py-2 text-sm font-semibold rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-all">📅 Fikstür</button>
+          <button onclick="showTab('mini', this)" class="tab-btn px-4 py-2 text-sm font-semibold rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-all">🧩 Toplu Puan Durumu</button>
+          <button onclick="showTab('adminPanel', this)" class="tab-btn px-4 py-2 text-sm font-bold rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transition-all ml-4 border border-slate-300">⚙️ Yönetim Paneli</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    
+    <!-- 1. Puan Durumu -->
+    <div id="standings" class="tab-content active">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Lig Puan Durumu</h2>
+            <p class="text-sm text-slate-500 mt-1">Grubun anlık sıralamasını ve detaylı istatistiklerini görün.</p>
+          </div>
+          <div class="w-full sm:w-64">
+            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Grup Seçimi</label>
+            <select id="standingsGroupSelect" onchange="showStandings()" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 outline-none font-semibold transition-all">
+              <option value="">Grup seçin...</option>
+            </select>
+          </div>
+        </div>
+        <div id="standingsContent" class="min-h-[300px]"></div>
+      </div>
+    </div>
+
+    <!-- 2. Fikstür (Haftanın Karşılaşmaları) -->
+    <div id="upcoming" class="tab-content">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Lig Fikstürü</h2>
+            <p class="text-sm text-slate-500 mt-1">Seçilen haftada tüm gruplarda oynanacak maçların eşleşme listesi.</p>
+          </div>
+          <div class="w-full sm:w-48">
+            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Hafta Seçimi</label>
+            <select id="upcomingWeekSelect" onchange="showUpcoming()" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 outline-none font-semibold transition-all"></select>
+          </div>
+        </div>
+        <div id="upcomingContent"></div>
+      </div>
+    </div>
+
+    <!-- 3. Toplu Puan Durumu -->
+    <div id="mini" class="tab-content">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
+        <h2 class="text-2xl font-bold text-slate-900 mb-2">Toplu Puan Durumu</h2>
+        <p class="text-sm text-slate-500 mb-8">Tüm grupların ilk 4 mücadelesini tek ekrandan takip edin.</p>
+        <div id="miniContent" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+      </div>
+    </div>
+
+    <!-- YÖNETİM PANELİ -->
+    <div id="adminPanel" class="tab-content">
+      <div class="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
+        <button onclick="showAdminTab('fixtures', this)" class="admin-tab-btn active font-bold text-indigo-600 px-4 py-2 border-b-2 border-indigo-600">🎮 Maç Yönetimi</button>
+        <button onclick="showAdminTab('autoupload', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 border-b-2 border-transparent">🚀 Sonuç Yükleme</button>
+        <button onclick="showAdminTab('dataentry', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 border-b-2 border-transparent">📥 Manuel Giriş</button>
+        <button onclick="showAdminTab('setup', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 border-b-2 border-transparent">⚙️ İlk Kurulum</button>
+        <button onclick="adminLogout()" class="text-xs font-bold text-red-600 hover:text-red-700 ml-auto px-3 py-1.5 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors shadow-sm">🔒 Çıkış Yap</button>
+      </div>
+
+      <!-- 1. MAÇ YÖNETİMİ VE SKOR DÜZENLEME -->
+      <div id="fixtures" class="admin-content">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900">🎮 Maç Yönetimi ve Skor Düzenleme</h2>
+              <p class="text-sm text-slate-500 mt-1">Haftalık eşleşmeler ve manuel skor düzeltme alanı (Yalnızca Yönetici Görür).</p>
+            </div>
+            <div class="w-full sm:w-48">
+              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Grup Seçimi</label>
+              <select id="fixtureGroupSelect" onchange="showFixtures()" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 outline-none font-semibold transition-all">
+                <option value="">Grup seçin...</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap gap-2 mb-8 pb-6 border-b border-slate-100">
+            <button onclick="downloadBackup()" class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> Sistemi Yedekle (İndir)
+            </button>
+            <label class="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-colors border border-indigo-100">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Yedekten Geri Yükle
+              <input type="file" id="restoreInput" accept="application/json" class="hidden" onchange="restoreFromFile(event)" />
+            </label>
+          </div>
+
+          <div id="fixtureContent"></div>
+        </div>
+      </div>
+
+      <!-- 2. SONUÇ YÜKLEME -->
+      <div id="autoupload" class="admin-content hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8 relative">
+          <h2 class="text-3xl font-extrabold text-slate-900 mb-2">🚀 Akıllı Sonuç Yükleme</h2>
+          <p class="text-slate-600 mb-8 max-w-3xl text-lg">PDF veya Excel sonuç listesini yükleyin. Yapay zeka tüm öğrencileri tanıyıp skorları tek tuşla sisteme işlesin.</p>
+          <div class="flex flex-col md:flex-row gap-6 mb-8 bg-slate-50 border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <div class="w-full md:w-1/3">
+              <label class="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider">Hafta Seçin</label>
+              <select id="autoUploadWeekSelect" class="w-full bg-white border border-slate-300 text-slate-900 text-base rounded-xl focus:ring-2 focus:ring-indigo-500 p-3.5 font-semibold shadow-sm">
+                <option value="1">1. Hafta Maçları</option><option value="2">2. Hafta Maçları</option><option value="3">3. Hafta Maçları</option><option value="4">4. Hafta Maçları</option><option value="5">5. Hafta Maçları</option><option value="6">6. Hafta Maçları</option><option value="7">7. Hafta Maçları</option><option value="8">8. Hafta Maçları</option><option value="9">9. Hafta Maçları</option><option value="10">10. Hafta Maçları</option>
+              </select>
+            </div>
+            <div class="w-full md:w-2/3">
+              <label class="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider">Sonuç Dosyasını Yükleyin</label>
+              <label class="flex justify-center w-full bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3.5 rounded-xl cursor-pointer font-bold text-lg transition-all shadow-md">
+                PDF veya Excel Seç
+                <input type="file" id="autoUploadInput" accept=".pdf, .xlsx, .xls, .csv" class="hidden" onchange="handleAutoUpload(event)" />
+              </label>
+            </div>
+          </div>
+          <div id="autoPreviewArea"></div>
+        </div>
+      </div>
+
+      <!-- 3. MANUEL GİRİŞ -->
+      <div id="dataentry" class="admin-content hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
+          <h2 class="text-2xl font-bold text-slate-900 mb-2">Manuel Veri Girişi</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Grup Seç:</label>
+              <select id="dataGroupSelect" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 outline-none font-semibold"><option value="">Grup seçin...</option></select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Hafta:</label>
+              <select id="dataWeekSelect" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 outline-none font-semibold"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select>
+            </div>
+            <div class="flex items-end gap-2">
+              <button id="btnPreview" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2.5 rounded-lg font-semibold shadow-sm" onclick="previewFromPaste()">Önizle</button>
+              <button id="btnApplyTop" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2.5 rounded-lg font-semibold shadow-sm btn-disabled" disabled onclick="applyFromTop()">Kaydet</button>
+            </div>
+          </div>
+          <textarea id="pasteInput" rows="8" class="w-full bg-slate-50 border border-slate-300 text-slate-700 rounded-xl p-4 font-mono text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="ÖĞRENCİ ADI[TAB]PUAN"></textarea>
+          <div id="previewArea" class="mt-6"></div>
+        </div>
+      </div>
+
+      <!-- 4. İLK KURULUM (KURA ÇEKİMİ) -->
+      <div id="setup" class="admin-content hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
+          <!-- KİLİTLİ ALAN -->
+          <div id="setupLockedArea" class="bg-amber-50 p-8 rounded-2xl border border-amber-200 text-center hidden mb-6 shadow-sm">
+            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl mx-auto mb-4 border border-amber-100 shadow-sm">🔒</div>
+            <h3 class="text-2xl font-extrabold text-amber-900 mb-2">Sistem Kilitli (Lig Zaten Kurulmuş)</h3>
+            <p class="text-amber-700 mb-6 font-medium max-w-2xl mx-auto">Mevcut bir lig ve atanmış gruplar zaten bulunuyor. Yeni baştan lig kurmak sistemdeki tüm eski verileri siler. Sıfırlamak istediğinize eminseniz Yönetici Şifrenizi girin.</p>
+            <div class="flex justify-center items-center gap-3">
+              <input type="password" id="resetPasswordInput" placeholder="Sıfırlama Şifresi" class="px-5 py-3 rounded-xl border border-amber-300 outline-none focus:ring-2 focus:ring-amber-500 font-bold text-center">
+              <button onclick="unlockSetup()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-md">Kilidi Aç ve Sıfırla</button>
+            </div>
+          </div>
+
+          <!-- AKTİF KURULUM ALANI -->
+          <div id="setupActiveArea">
+            <h2 class="text-2xl font-bold text-slate-900 mb-2">⚙️ Otomatik Kura ve Grup Kurulumu</h2>
+            <p class="text-slate-600 mb-8 max-w-4xl">Sene başında öğrencileri başarı sırasına göre gruplara <b>yılan (serpentine) sistemiyle</b> adil bir şekilde dağıtın. Eksik kalan kontenjanlar için her maç otomatik <span class="font-bold text-emerald-600">14 net</span> yapacak "Bot" öğrenciler ekleyebilirsiniz.</p>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div class="flex flex-col h-full">
+                <div class="flex justify-between items-end mb-3">
+                  <div>
+                    <label class="block text-sm font-bold text-slate-700">1. Başarı Sıralı Öğrenci Listesi</label>
+                  </div>
+                  <label class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-2 rounded-lg cursor-pointer border border-indigo-200 transition-colors flex items-center gap-1 shadow-sm">
+                    📄 PDF'den Çek
+                    <input type="file" accept=".pdf" class="hidden" onchange="extractNamesFromPDF(event)" />
+                  </label>
+                </div>
+                <textarea id="setupStudentList" class="flex-grow w-full min-h-[300px] bg-slate-50 border border-slate-300 text-slate-700 rounded-xl p-4 font-mono text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner whitespace-pre" placeholder="ALİ YILMAZ&#10;AYŞE FATMA..."></textarea>
+                <div class="mt-3 flex justify-between items-center bg-slate-100 px-4 py-2 rounded-lg border border-slate-200">
+                  <span class="text-sm font-bold text-slate-700" id="setupStudentCount">Toplam: 0 Öğrenci</span>
+                </div>
+              </div>
+
+              <div class="space-y-6">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                  <label class="block text-sm font-bold text-slate-700 mb-4">2. Grup Ayarları</label>
+                  <div class="flex flex-col sm:flex-row gap-4 mb-2">
+                    <div class="w-full sm:w-1/3">
+                      <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Grup Sayısı</label>
+                      <input type="number" id="setupGroupCount" min="2" max="14" value="10" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 font-bold outline-none focus:ring-2 focus:ring-indigo-500 text-lg text-center" oninput="calculateSetup()">
+                    </div>
+                    <div class="w-full sm:w-2/3">
+                      <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Öngörülen Dağılım</label>
+                      <div id="setupDistribution" class="text-sm font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 p-3 rounded-lg flex items-center justify-center min-h-[46px]">Hesaplanıyor...</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="bg-emerald-50 p-5 rounded-xl border border-emerald-200 shadow-sm">
+                  <label class="block text-sm font-bold text-emerald-900 mb-2">🤖 3. Bot Oyuncu Ekle (Opsiyonel)</label>
+                  <p class="text-xs text-emerald-700 mb-3 font-medium">Virgülle ayırarak yazın (Örn: Yapay Zeka, Zeka Küpü).</p>
+                  <textarea id="setupBotList" rows="3" class="w-full bg-white border border-emerald-300 text-slate-700 rounded-lg p-3 font-mono text-sm focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
+                  <div class="mt-2 text-sm font-bold text-emerald-700 text-right" id="setupBotCount">Toplam: 0 Bot</div>
+                </div>
+
+                <div class="pt-4">
+                  <button onclick="executeSetup()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-extrabold py-4 px-6 rounded-xl shadow-lg transition-transform transform hover:-translate-y-1 text-lg">Grupları Oluştur ve Fikstürü Çek</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </main>
+
+  <script>
+    // ---------- Core Depolama ----------
+    const STORAGE_KEY = 'mathLeagueData6';
+    let leagueData = { groups: {}, fixtures: {}, results: {}, matchIndex: {}, bots: [] };
+    function normName(s){ return !s ? '' : s.replace(/\u00A0/g,' ').normalize('NFKC').trim().replace(/\s+/g,' ').toLocaleUpperCase('tr-TR'); }
+
+    // ---------- Yedek ----------
+    function createDownloadableBackup() {
+      const dataStr = JSON.stringify(leagueData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      let a = document.getElementById('downloadBackup');
+      if (!a) { a = document.createElement('a'); a.id = 'downloadBackup'; a.style.display = 'none'; document.body.appendChild(a); }
+      a.href = URL.createObjectURL(dataBlob);
+      a.download = `matematik_ligi_yedek_${new Date().toISOString().slice(0,10)}.json`;
+    }
+    function downloadBackup(){ const a=document.getElementById('downloadBackup'); if(a) a.click(); }
+    function restoreFromFile(ev){
+      const f = ev.target.files?.[0]; if(!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const obj = JSON.parse(reader.result);
+          if (obj && obj.groups) {
+            leagueData = { matchIndex:{}, bots:[], ...obj };
+            Object.keys(leagueData.fixtures||{}).forEach(g => buildMatchIndex(g));
+            saveData(); populateGroupSelects();
+            showFixtures(); showStandings();
+            fillUpcomingWeekSelect(); showUpcoming(); renderMiniStandings(); renderSetupState();
+            alert('✅ Yedekten başarıyla geri yüklendi');
+          } else { alert('❌ Geçersiz yedek dosyası'); }
+        } catch { alert('❌ Dosya okunamadı'); }
+        ev.target.value = '';
+      };
+      reader.readAsText(f);
+    }
+    function saveData(){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(leagueData)); createDownloadableBackup(); } catch(e){} }
+    function loadData(){
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) { try { leagueData = { matchIndex:{}, bots:[], ...JSON.parse(saved) }; } catch(e){} }
+      if (!leagueData.bots) leagueData.bots = [];
+    }
+
+    // ---------- UI Tab Kontrolleri ----------
+    function showAdminTab(adminTabId, btn) {
+      document.querySelectorAll('.admin-content').forEach(t=>t.classList.add('hidden'));
+      document.getElementById(adminTabId).classList.remove('hidden');
+      
+      document.querySelectorAll('.admin-tab-btn').forEach(b=>{
+        b.classList.remove('active', 'font-bold', 'text-indigo-600', 'border-indigo-600');
+        b.classList.add('font-semibold', 'text-slate-500', 'border-transparent');
+      });
+      if(btn) {
+        btn.classList.remove('font-semibold', 'text-slate-500', 'border-transparent');
+        btn.classList.add('active', 'font-bold', 'text-indigo-600', 'border-indigo-600');
+      }
+      if (adminTabId === 'fixtures') showFixtures();
+    }
+
+    const ADMIN_PASS = '26575982824.bati';
+    const AUTH_KEY = 'mathLeagueAdminAuth';
+
+    function checkAdminAccess() {
+      if (localStorage.getItem(AUTH_KEY) === 'true') {
+        return true;
+      }
+      const entered = prompt("🔒 Yönetim Paneline erişmek için yönetici şifrenizi girin:");
+      if (entered === ADMIN_PASS) {
+        localStorage.setItem(AUTH_KEY, 'true');
+        alert("✅ Yönetici girişi başarılı! Bu tarayıcıda yetkiniz hatırlandı.");
+        return true;
+      } else if (entered !== null) {
+        alert("❌ Hatalı şifre! Yönetim paneline erişim engellendi.");
+      }
+      return false;
+    }
+
+    function adminLogout() {
+      if (confirm("Yönetim panelinden çıkış yapmak istediğinize emin misiniz? (Tekrar girmek için şifre gerekecektir)")) {
+        localStorage.removeItem(AUTH_KEY);
+        const btnStandings = document.getElementById('btnTabStandings');
+        showTab('standings', btnStandings);
+        alert("✅ Yönetici oturumu kapatıldı.");
+      }
+    }
+
+    function showTab(tabName, btn){
+      if (tabName === 'adminPanel') {
+        if (!checkAdminAccess()) return;
+      }
+
+      document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+      const tgt = document.getElementById(tabName);
+      if(tgt) tgt.classList.add('active');
+      
+      document.querySelectorAll('.tab-btn').forEach(b=>{ 
+        b.className = b.className.replace('bg-white shadow-sm text-indigo-700', 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50');
+      });
+      if (btn) btn.className = "tab-btn px-4 py-2 text-sm font-bold rounded-xl bg-white shadow-sm text-indigo-700 transition-all border border-slate-300";
+      
+      if (tabName==='standings') showStandings(); 
+      if (tabName==='fixtures') showFixtures();
+      if (tabName==='upcoming'){ fillUpcomingWeekSelect(true); showUpcoming(); } 
+      if (tabName==='mini') renderMiniStandings();
+      if (tabName==='adminPanel') showAdminTab('fixtures');
+    }
+
+    // ---------- Fikstür ----------
+    function generateFixtures(group){
+      const members = (leagueData.groups[group]||[]).filter(m=>m && m.trim()!=='');
+      const n = members.length; if (n < 2) return [];
+      const playingMembers = [...members];
+      if (playingMembers.length % 2 !== 0) playingMembers.push('BAY');
+      
+      const numPlayers = playingMembers.length;
+      const weeks = numPlayers - 1;
+      const fixtures = Array.from({length: weeks}, (_,i)=>({week:i+1, matches:[]}));
+      
+      for (let week = 0; week < weeks; week++) {
+        for (let i = 0; i < numPlayers / 2; i++) {
+          let home = playingMembers[i];
+          let away = playingMembers[numPlayers - 1 - i];
+          if (home !== 'BAY' && away !== 'BAY') fixtures[week].matches.push({ id: `${group}_w${week+1}_m${i}`, home, away });
+        }
+        playingMembers.splice(1, 0, playingMembers.pop());
+      }
+      return fixtures;
+    }
+    function ensureFixturesForGroup(g){ if (!leagueData.fixtures[g] || !leagueData.fixtures[g].length){ leagueData.fixtures[g] = generateFixtures(g); } }
+    function buildMatchIndex(g){
+      const fx = leagueData.fixtures[g]||[];
+      for (const w of fx){ for (const m of w.matches){ leagueData.matchIndex[m.id] = { group:g, week:w.week, home:m.home, away:m.away }; } }
+    }
+
+    function populateGroupSelects(){
+      const selects = ['fixtureGroupSelect', 'standingsGroupSelect', 'dataGroupSelect'].map(id => document.getElementById(id));
+      selects.forEach(s => { if(s) s.innerHTML = '<option value="">Grup seçin...</option>'; });
+      const groups = Object.keys(leagueData.groups || {}).sort();
+      groups.forEach(g=>{
+        const has = (leagueData.groups[g]||[]).some(n=>n && n.trim()!=='');
+        if (has){
+          const txt = 'Grup ' + g;
+          selects.forEach(s => { if(s) s.insertAdjacentHTML('beforeend', `<option value="${g}">${txt}</option>`); });
+        }
+      });
+    }
+
+    function formatNet(num) {
+      if (num === '' || num === null || num === undefined || isNaN(num)) return '';
+      const n = parseFloat(num);
+      return Number.isInteger(n) ? n.toString() : n.toFixed(1).replace('.', ',');
+    }
+    function parseNet(val) {
+      if (val === '' || val === null || val === undefined) return '';
+      const n = parseFloat(String(val).replace(',', '.'));
+      return isNaN(n) ? '' : Math.round(n * 10) / 10;
+    }
+
+    // ---------- Puan Durumu ----------
+    function calculateStandings(group){
+      const members = (leagueData.groups[group]||[]).filter(m=>m.trim()!=='');
+      const S = members.map(n=>({name:n, played:0, won:0, drawn:0, lost:0, correct:0, wrong:0, goalDifference:0, points:0}));
+      const idx = Object.fromEntries(S.map((s,i)=>[s.name,i]));
+      
+      Object.keys(leagueData.results||{}).forEach(matchId=>{
+        const meta = leagueData.matchIndex[matchId];
+        if (!meta || meta.group !== group) return;
+        const r = leagueData.results[matchId];
+        if (r.homeScore==='' || r.awayScore==='' || r.homeScore==null || r.awayScore==null) return;
+        const hi = idx[meta.home], ai = idx[meta.away]; if (hi===undefined || ai===undefined) return;
+        const hs = parseNet(r.homeScore);
+        const as = parseNet(r.awayScore);
+        if (hs==='' || as==='') return;
+        const H=S[hi], A=S[ai];
+        H.played++; A.played++; 
+        H.correct = Math.round((H.correct + hs) * 10) / 10; 
+        H.wrong = Math.round((H.wrong + as) * 10) / 10; 
+        A.correct = Math.round((A.correct + as) * 10) / 10; 
+        A.wrong = Math.round((A.wrong + hs) * 10) / 10;
+        if (hs > as){ H.won++; H.points+=3; A.lost++; }
+        else if (hs < as){ A.won++; A.points+=3; H.lost++; }
+        else { H.drawn++; A.drawn++; H.points++; A.points++; }
+        H.goalDifference = Math.round((H.correct - H.wrong) * 10) / 10; 
+        A.goalDifference = Math.round((A.correct - A.wrong) * 10) / 10;
+      });
+      S.sort((a,b)=>(b.points-a.points)||(b.correct-a.correct)||(b.goalDifference-a.goalDifference));
+      return S;
+    }
+
+    function showStandings(){
+      const g = document.getElementById('standingsGroupSelect').value; const out = document.getElementById('standingsContent');
+      if (!g){ out.innerHTML='<div class="p-8 text-center text-slate-400 font-medium">Lütfen yukarıdan bir grup seçin.</div>'; return; }
+      ensureFixturesForGroup(g); const standings = calculateStandings(g);
+      out.innerHTML = `
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+          <table class="w-full text-left border-collapse bg-white">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-widest text-slate-500">
+                <th class="py-4 px-4 font-bold text-center w-16">Sıra</th>
+                <th class="py-4 px-4 font-bold">Öğrenci</th>
+                <th class="py-4 px-3 font-bold text-center">O</th>
+                <th class="py-4 px-3 font-bold text-center text-emerald-600">G</th>
+                <th class="py-4 px-3 font-bold text-center text-amber-500">B</th>
+                <th class="py-4 px-3 font-bold text-center text-red-500">M</th>
+                <th class="py-4 px-4 font-extrabold text-center text-indigo-700">Puan</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-sm">
+              ${standings.map((t,i)=>{
+                const isBot = leagueData.bots && leagueData.bots.includes(normName(t.name));
+                return `<tr class="hover:bg-slate-50 transition-colors ${i<4?'qualified-row':''}">
+                  <td class="py-3 px-4 text-center font-bold text-slate-400 ${i<4?'border-l-4 border-emerald-500':''}">${i+1}</td>
+                  <td class="py-3 px-4 font-semibold text-slate-800">${t.name} ${isBot ? '<span class="text-xl" title="Yapay Zeka Bot Oyuncu">🤖</span>' : ''}</td>
+                  <td class="py-3 px-3 text-center text-slate-600">${t.played}</td>
+                  <td class="py-3 px-3 text-center font-medium text-emerald-600">${t.won}</td>
+                  <td class="py-3 px-3 text-center font-medium text-amber-500">${t.drawn}</td>
+                  <td class="py-3 px-3 text-center font-medium text-red-500">${t.lost}</td>
+                  <td class="py-3 px-4 text-center"><span class="inline-flex items-center justify-center px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 font-black text-base shadow-sm border border-indigo-100">${t.points}</span></td>
+                </tr>`}).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-4 flex items-center gap-2 text-xs font-medium text-emerald-600 bg-emerald-50 inline-flex px-3 py-1.5 rounded-lg border border-emerald-100">
+          <div class="w-2 h-2 rounded-full bg-emerald-500"></div> Yeşil alan: Sonraki tura çıkan ilk 4 öğrenci
+        </div>`;
+      renderMiniStandings();
+    }
+
+    function showFixtures(){
+      const g = document.getElementById('fixtureGroupSelect').value; const out = document.getElementById('fixtureContent');
+      if (!g){ out.innerHTML='<div class="p-8 text-center text-slate-400 font-medium">Lütfen yukarıdan bir grup seçin.</div>'; return; }
+      ensureFixturesForGroup(g); const fixtures = leagueData.fixtures[g]||[];
+      out.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          ${fixtures.map(week=>`
+            <div id="week_${week.week}" class="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm">
+              <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-200">
+                <h3 class="font-extrabold text-slate-800">Hafta ${week.week}</h3>
+                <span class="text-xs font-bold px-2 py-1 bg-white text-slate-500 rounded border border-slate-200 shadow-sm">${week.matches.length} Maç</span>
+              </div>
+              <div class="space-y-3">
+                ${week.matches.map(m=>`
+                  <div class="flex items-center gap-3 bg-white border border-slate-200 p-3 rounded-lg shadow-sm hover:border-indigo-300 transition-colors">
+                    <div class="flex-1 text-right font-semibold text-slate-700 text-sm leading-tight">${m.home} ${leagueData.bots.includes(normName(m.home))?'🤖':''}</div>
+                    <div class="flex items-center gap-1 bg-slate-50 rounded-md p-1 border border-slate-200">
+                      <input type="number" step="0.1" value="${leagueData.results[m.id]?.homeScore ?? ''}" oninput="updateScore('${m.id}','homeScore',this.value)" class="w-14 h-8 text-center bg-white border border-slate-300 rounded text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
+                      <span class="text-slate-400 font-bold">:</span>
+                      <input type="number" step="0.1" value="${leagueData.results[m.id]?.awayScore ?? ''}" oninput="updateScore('${m.id}','awayScore',this.value)" class="w-14 h-8 text-center bg-white border border-slate-300 rounded text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div class="flex-1 text-left font-semibold text-slate-700 text-sm leading-tight">${leagueData.bots.includes(normName(m.away))?'🤖':''} ${m.away}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>`;
+    }
+    function updateScore(matchId, key, val){
+      if (!leagueData.results[matchId]) leagueData.results[matchId] = {};
+      if (val === '') leagueData.results[matchId][key] = '';
+      else { const n = parseNet(val); leagueData.results[matchId][key] = n === '' ? '' : n; }
+      saveData();
+      const g = leagueData.matchIndex[matchId]?.group || matchId.split('_')[0];
+      if (document.getElementById('standingsGroupSelect').value === g) showStandings();
+      renderMiniStandings();
+    }
+
+    function getNextActiveWeek() {
+      let maxWeek = 0;
+      Object.keys(leagueData.groups || {}).forEach(g => {
+        ensureFixturesForGroup(g);
+        const w = leagueData.fixtures[g]?.length || 0;
+        if (w > maxWeek) maxWeek = w;
+      });
+      if (maxWeek === 0) return 1;
+
+      for (let w = 1; w <= maxWeek; w++) {
+        let isWeekComplete = true;
+        let weekHasMatches = false;
+
+        for (const g of Object.keys(leagueData.groups || {})) {
+          const fixtures = leagueData.fixtures[g] || [];
+          const weekData = fixtures.find(x => x.week === w);
+          if (weekData && weekData.matches && weekData.matches.length) {
+            weekHasMatches = true;
+            for (const m of weekData.matches) {
+              if (m.home === 'BAY' || m.away === 'BAY') continue;
+              const r = leagueData.results[m.id];
+              const isPlayed = r && r.homeScore !== '' && r.awayScore !== '' && r.homeScore != null && r.awayScore != null;
+              if (!isPlayed) {
+                isWeekComplete = false;
+                break;
+              }
+            }
+          }
+          if (!isWeekComplete) break;
+        }
+
+        if (weekHasMatches && !isWeekComplete) {
+          return w; // Oynanmamış ilk haftayı döndür
+        }
+      }
+
+      return maxWeek;
+    }
+
+    function fillUpcomingWeekSelect(forceAutoSelect = false){
+      let maxWeek = 0;
+      Object.keys(leagueData.groups || {}).forEach(g=>{
+        ensureFixturesForGroup(g); const w = leagueData.fixtures[g]?.length || 0; if (w > maxWeek) maxWeek = w;
+      });
+      const sel = document.getElementById('upcomingWeekSelect'); if (!sel) return; 
+      const currentVal = sel.value;
+      sel.innerHTML = '';
+      for (let w=1; w<=maxWeek; w++) sel.insertAdjacentHTML('beforeend', `<option value="${w}">${w}. Hafta Maçları</option>`);
+      
+      const nextActive = getNextActiveWeek();
+      if (forceAutoSelect || !currentVal || parseInt(currentVal,10) > maxWeek) {
+        sel.value = String(nextActive);
+      } else {
+        sel.value = currentVal;
+      }
+      
+      // Oto yükleme hafta seçicisini de otomatik güncelle
+      const autoSel = document.getElementById('autoUploadWeekSelect');
+      if (autoSel && forceAutoSelect) autoSel.value = String(nextActive);
+    }
+    function showUpcoming(){
+      const sel = document.getElementById('upcomingWeekSelect'); const week = parseInt(sel?.value||'1',10);
+      const out = document.getElementById('upcomingContent'); if (!out) return;
+      let html = '<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">';
+      Object.keys(leagueData.groups || {}).sort().forEach(g=>{
+        const w = (leagueData.fixtures[g]||[]).find(x=>x.week===week);
+        if (w && w.matches && w.matches.length){
+          html += `<div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+              <span class="font-bold text-slate-800">Grup ${g}</span>
+              <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100">Hafta ${week}</span>
+            </div>
+            <div class="p-4 space-y-3">
+              ${w.matches.map(m=>{
+                const r = leagueData.results[m.id];
+                const has = r && r.homeScore!=='' && r.awayScore!=='' && r.homeScore!=null && r.awayScore!=null;
+                return `<div class="flex items-center gap-2">
+                  <div class="flex-1 text-right text-sm font-semibold text-slate-700">${m.home}</div>
+                  <div class="px-2 text-xs font-bold text-slate-300">VS</div>
+                  <div class="flex-1 text-left text-sm font-semibold text-slate-700">${m.away}</div>
+                  ${has ? `<span class="ml-1 text-xs text-emerald-600 font-bold" title="Maç Tamamlandı">✓</span>` : ''}
+                </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+        }
+      });
+      html += '</div>';
+      out.innerHTML = html === '<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"></div>' ? '<div class="p-8 text-center text-slate-400 font-medium">Bu hafta için maç bulunamadı.</div>' : html;
+    }
+
+    function renderMiniStandings(){
+      const wrap = document.getElementById('miniContent'); if (!wrap) return;
+      let html = '';
+      Object.keys(leagueData.groups || {}).sort().forEach(g=>{
+        const members = (leagueData.groups[g]||[]).filter(x=>x && x.trim()!=='');
+        if (!members.length) return;
+        ensureFixturesForGroup(g); const S = calculateStandings(g);
+        html += `<div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div class="px-4 py-3 bg-gradient-to-r from-slate-800 to-slate-700 text-white font-bold flex justify-between items-center">
+              <span>Grup ${g}</span>
+            </div>
+            <div class="overflow-x-auto"><table class="w-full text-xs text-left"><thead class="bg-slate-50 text-slate-500 uppercase font-bold border-b border-slate-200">
+              <tr><th class="px-3 py-2 text-center w-8">#</th><th class="px-3 py-2">İsim</th><th class="px-2 py-2 text-center" title="Oynanan">O</th><th class="px-2 py-2 text-center text-indigo-600">P</th></tr></thead>
+              <tbody class="divide-y divide-slate-100">
+                ${S.map((t,i)=>`<tr class="${i<4?'bg-emerald-50/50':'bg-white'} hover:bg-slate-50 transition-colors">
+                  <td class="px-3 py-2 text-center font-bold ${i<4?'text-emerald-600':'text-slate-400'}">${i+1}</td>
+                  <td class="px-3 py-2 font-semibold text-slate-700 truncate max-w-[120px]" title="${t.name}">${t.name} ${leagueData.bots.includes(normName(t.name))?'🤖':''}</td>
+                  <td class="px-2 py-2 text-center text-slate-500">${t.played}</td>
+                  <td class="px-2 py-2 text-center font-black text-indigo-700">${t.points}</td></tr>`).join('')}
+              </tbody></table></div></div>`;
+      });
+      wrap.innerHTML = html || '<div class="p-8 text-center text-slate-400 font-medium w-full col-span-full">Henüz grup bulunmuyor. Kurulum sekmesinden kura çekimi yapın.</div>';
+    }
+
+    // ---------- KURA KURULUMU ----------
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('setupStudentList')?.addEventListener('input', calculateSetup);
+      document.getElementById('setupBotList')?.addEventListener('input', calculateSetup);
+    });
+
+    function renderSetupState() {
+      const isSetup = Object.keys(leagueData.groups || {}).length > 0;
+      if (isSetup) {
+        document.getElementById('setupLockedArea').classList.remove('hidden');
+        document.getElementById('setupActiveArea').classList.add('hidden');
+      } else {
+        document.getElementById('setupLockedArea').classList.add('hidden');
+        document.getElementById('setupActiveArea').classList.remove('hidden');
+      }
+    }
+
+    function unlockSetup() {
+      const pw = document.getElementById('resetPasswordInput').value;
+      if (pw === ADMIN_PASS) {
+        document.getElementById('setupLockedArea').classList.add('hidden');
+        document.getElementById('setupActiveArea').classList.remove('hidden');
+        document.getElementById('resetPasswordInput').value = '';
+        alert("✅ Kilit açıldı. Yeni listenizi girip 'Grupları Oluştur ve Fikstürü Çek' butonuna basabilirsiniz.");
+      } else { alert("❌ Hatalı şifre!"); }
+    }
+
+
+
+    function getSetupStudents() { return document.getElementById('setupStudentList').value.split(/\r?\n/).map(s => normName(s)).filter(Boolean); }
+    function getSetupBots() { return document.getElementById('setupBotList').value.split(',').map(s => normName(s)).filter(Boolean); }
+
+    function calculateSetup() {
+      const students = getSetupStudents(); const bots = getSetupBots();
+      const totalCount = students.length + bots.length;
+      const groupCount = parseInt(document.getElementById('setupGroupCount').value, 10) || 1;
+      
+      document.getElementById('setupStudentCount').innerText = `Toplam: ${students.length} Öğrenci`;
+      document.getElementById('setupBotCount').innerText = `Toplam: ${bots.length} Bot`;
+
+      if (groupCount < 1) return;
+      const baseSize = Math.floor(totalCount / groupCount); const remainder = totalCount % groupCount;
+      const distEl = document.getElementById('setupDistribution');
+      if (totalCount === 0) distEl.innerHTML = "<span class='text-slate-400'>Öğrenci bekleniyor...</span>";
+      else if (remainder === 0) distEl.innerText = `${groupCount} grup x ${baseSize} kişi (Tam Eşit)`;
+      else distEl.innerText = `${remainder} grup x ${baseSize + 1} kişi, ${groupCount - remainder} grup x ${baseSize} kişi`;
+    }
+
+    async function extractNamesFromPDF(event) {
+      const file = event.target.files[0]; if (!file) return;
+      const labelEl = event.target.parentElement; const originalText = labelEl.innerHTML;
+      labelEl.innerHTML = "⏳ Okunuyor...";
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i); const content = await page.getTextContent();
+          const items = content.items; const rows = [];
+          items.forEach(item => {
+            if (!item.str || !item.str.trim()) return;
+            const y = Math.round(item.transform[5]); const x = Math.round(item.transform[4]);
+            let row = rows.find(r => Math.abs(r.y - y) < 4);
+            if (!row) { row = { y, items: [] }; rows.push(row); }
+            row.items.push({ x, str: item.str });
+          });
+          rows.sort((a, b) => b.y - a.y); rows.forEach(row => row.items.sort((a, b) => a.x - b.x));
+          fullText += rows.map(r => r.items.map(i => i.str).join(" ")).join("\n") + "\n";
+        }
+        
+        const regex = /\b\d+-([A-ZÇĞİÖŞÜIİ][A-ZÇĞİÖŞÜIİ\s]{3,}[A-ZÇĞİÖŞÜIİ])(?=\s|\d|,|%)/g;
+        let match; const names = [];
+        while ((match = regex.exec(fullText)) !== null) { names.push(normName(match[1])); }
+        
+        if (names.length > 0) {
+          document.getElementById('setupStudentList').value = names.join('\n');
+          calculateSetup();
+          alert(`✅ PDF'den başarı sırasına göre ${names.length} öğrenci başarıyla çıkarıldı! Lütfen listeyi kontrol edip eksik varsa düzeltin.`);
+        } else {
+          alert("❌ PDF dosyasında beklenen formatta öğrenci ismi bulunamadı. Lütfen listeyi Excel'den kopyalayıp manuel yapıştırın.");
+        }
+      } catch (err) { alert("Hata: " + err.message); }
+      labelEl.innerHTML = originalText; event.target.value = '';
+    }
+
+    function executeSetup() {
+      const students = getSetupStudents(); const bots = getSetupBots();
+      const groupCount = parseInt(document.getElementById('setupGroupCount').value, 10);
+      if (students.length === 0) { alert("Lütfen en az bir öğrenci girin!"); return; }
+      if (!groupCount || groupCount < 2 || groupCount > 14) { alert("Grup sayısı 2 ile 14 arasında olmalıdır."); return; }
+
+      const allPlayers = [...students, ...bots];
+      const groups = Array.from({length: groupCount}, () => []);
+      const groupNames = 'ABCDEFGHIJKLMN'.split('').slice(0, groupCount);
+      
+      let direction = 1; let currentGroup = 0;
+      for (let i = 0; i < allPlayers.length; i++) {
+        groups[currentGroup].push(allPlayers[i]);
+        currentGroup += direction;
+        if (currentGroup >= groupCount) { currentGroup = groupCount - 1; direction = -1; }
+        else if (currentGroup < 0) { currentGroup = 0; direction = 1; }
+      }
+      
+      leagueData = { groups: {}, fixtures: {}, results: {}, matchIndex: {}, bots: bots };
+      groupNames.forEach((g, index) => {
+        leagueData.groups[g] = groups[index];
+        ensureFixturesForGroup(g); buildMatchIndex(g);
+      });
+      
+      saveData(); populateGroupSelects(); fillUpcomingWeekSelect();
+      renderSetupState(); 
+      
+      const btnStandings = document.getElementById('btnTabStandings');
+      showTab('standings', btnStandings);
+      
+      const selS = document.getElementById('standingsGroupSelect');
+      if (selS && selS.options.length > 1){ selS.selectedIndex = 1; showStandings(); }
+      
+      setTimeout(() => alert("🎉 Gruplar başarıyla oluşturuldu ve yılan sistemiyle adil bir şekilde dağıtıldı! Fikstürler çekildi."), 100);
+    }
+
+    // ---------- AUTO UPLOAD ----------
+    function parseTextForScores(text) {
+      const results = {};
+      const cleanFullText = text.replace(/\u00A0/g, ' ').normalize('NFKC').toLocaleUpperCase('tr-TR');
+      
+      const allPlayers = [];
+      Object.values(leagueData.groups || {}).forEach(arr => allPlayers.push(...arr));
+      
+      allPlayers.forEach(player => {
+        if (!player || player === 'BAY' || (leagueData.bots && leagueData.bots.includes(normName(player)))) return;
+        
+        const pNorm = normName(player);
+        let pos = cleanFullText.indexOf(pNorm);
+        
+        if (pos === -1) {
+          const parts = pNorm.split(' ');
+          if (parts.length > 2) {
+            const shortName = parts[0] + ' ' + parts[parts.length - 1];
+            pos = cleanFullText.indexOf(shortName);
+          }
+        }
+        
+        if (pos === -1) {
+          const esc = pNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const r = new RegExp(`\\d+-[^\\n\\r]*?${esc}`, 'i');
+          const m = cleanFullText.match(r);
+          if (m) pos = m.index;
+        }
+        
+        if (pos !== -1) {
+          const slice = cleanFullText.substring(pos, pos + 300);
+          let foundNet = null;
+          
+          // 1. Doğrudan D ve Y sayısından Net hesaplama: Net = D - (Y / 3)
+          // Format: %xx,xx D Y (Örn: %46,67 8 3 -> Net = 8 - 1 = 7.0)
+          const pctMatch = slice.match(/%\s*-?[\d,\.]+\s+(\d{1,2})\s+(\d{1,2})/);
+          if (pctMatch) {
+            const d = parseInt(pctMatch[1], 10);
+            const y = parseInt(pctMatch[2], 10);
+            if (d >= 0 && d <= 15 && (d + y) <= 15) {
+              const rawNet = d - (y / 3);
+              foundNet = Math.round(rawNet * 10) / 10;
+            }
+          }
+          
+          if (foundNet === null) {
+            const pctMatch2 = slice.match(/%\s*-?[\d,\.]+[^\d\n\r]*[\r\n]+\s*(\d{1,2})\s+(\d{1,2})/);
+            if (pctMatch2) {
+              const d = parseInt(pctMatch2[1], 10);
+              const y = parseInt(pctMatch2[2], 10);
+              if (d >= 0 && d <= 15 && (d + y) <= 15) {
+                const rawNet = d - (y / 3);
+                foundNet = Math.round(rawNet * 10) / 10;
+              }
+            }
+          }
+          
+          // 2. Net sütunundaki ondalıklı sayıyı doğrudan okuma (Örn: 7,000 veya 6,670 veya 14,000)
+          if (foundNet === null) {
+            const decMatch = slice.match(/(?<![%\d])(-?\d{1,2}[,\.]\d{1,3})/);
+            if (decMatch) {
+              const val = parseFloat(decMatch[1].replace(',', '.'));
+              if (!isNaN(val) && val >= -5 && val <= 15) {
+                foundNet = Math.round(val * 10) / 10;
+              }
+            }
+          }
+
+          // 3. Herhangi bir D Y ikilisi bulunursa
+          if (foundNet === null) {
+            const pairMatches = [...slice.matchAll(/(?<![,\.\d])(\d{1,2})\s+(\d{1,2})(?![,\.\d])/g)];
+            for (const pm of pairMatches) {
+              const d = parseInt(pm[1], 10);
+              const y = parseInt(pm[2], 10);
+              if (d >= 0 && d <= 15 && y >= 0 && y <= 15 && (d + y) <= 15) {
+                const rawNet = d - (y / 3);
+                foundNet = Math.round(rawNet * 10) / 10;
+                break;
+              }
+            }
+          }
+          
+          if (foundNet !== null) {
+            results[player] = Math.min(15, Math.max(-5, foundNet));
+          }
+        }
+      });
+      
+      return results;
+    }
+
+    async function extractFromPDF(file) {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = "";
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        
+        const items = content.items; const rows = [];
+        items.forEach(item => {
+          if (!item.str || !item.str.trim()) return;
+          const y = Math.round(item.transform[5]); const x = Math.round(item.transform[4]);
+          let row = rows.find(r => Math.abs(r.y - y) < 4);
+          if (!row) { row = { y, items: [] }; rows.push(row); }
+          row.items.push({ x, str: item.str });
+        });
+        
+        rows.sort((a, b) => b.y - a.y);
+        rows.forEach(row => row.items.sort((a, b) => a.x - b.x));
+        const lines = rows.map(r => r.items.map(i => i.str).join(" "));
+        fullText += lines.join("\n") + "\n";
+      }
+      return parseTextForScores(fullText);
+    }
+
+    async function extractFromExcel(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const results = {};
+            
+            const allPlayers = [];
+            Object.values(leagueData.groups || {}).forEach(arr => allPlayers.push(...arr));
+            
+            workbook.SheetNames.forEach(sheetName => {
+              const sheet = workbook.Sheets[sheetName];
+              if (!sheet) return;
+              const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+              if (!rows || rows.length === 0) return;
+              
+              // 1. Sütun indekslerini tespit et (Öğrenci Adı, Net ve D/Y)
+              let nameCol = -1;
+              let netCol = -1;
+              let dCol = -1;
+              let yCol = -1;
+              
+              for (let r = 0; r < Math.min(10, rows.length); r++) {
+                const row = rows[r];
+                for (let c = 0; c < row.length; c++) {
+                  const cellStr = normName(String(row[c]));
+                  const isPercent = cellStr.includes('%') || cellStr.includes('N%') || cellStr.includes('YÜZDE');
+                  
+                  if (nameCol === -1 && (cellStr.includes('ÖĞRE') || cellStr.includes('AD SOYAD') || cellStr.includes('ADI SOYADI') || cellStr.includes('İSİM') || cellStr.includes('ISIM'))) {
+                    nameCol = c;
+                  }
+                  if (!isPercent && netCol === -1 && (cellStr.includes('05.N') || cellStr.includes('MAT 05') || (cellStr.includes('MAT') && cellStr.endsWith('.N')) || cellStr === 'N' || cellStr === 'NET' || cellStr === 'MAT NET')) {
+                    netCol = c;
+                  }
+                  if (!isPercent && dCol === -1 && (cellStr.includes('01.D') || cellStr.includes('MAT 01') || (cellStr.includes('MAT') && cellStr.endsWith('.D')) || cellStr === 'D')) {
+                    dCol = c;
+                  }
+                  if (!isPercent && yCol === -1 && (cellStr.includes('02.Y') || cellStr.includes('MAT 02') || (cellStr.includes('MAT') && cellStr.endsWith('.Y')) || cellStr === 'Y')) {
+                    yCol = c;
+                  }
+                }
+              }
+              
+              // 2. Tüm satırları tara
+              rows.forEach(row => {
+                if (!row || row.length === 0) return;
+                
+                let foundPlayer = null;
+                let netScore = null;
+                
+                if (nameCol !== -1 && row[nameCol]) {
+                  const cellName = normName(String(row[nameCol]));
+                  foundPlayer = allPlayers.find(p => p && (cellName === normName(p) || cellName.includes(normName(p)) || normName(p).includes(cellName)));
+                }
+                
+                if (!foundPlayer) {
+                  for (let c = 0; c < row.length; c++) {
+                    if (c === netCol || c === dCol || c === yCol) continue;
+                    const cellStr = normName(String(row[c]));
+                    if (cellStr.length >= 3) {
+                      foundPlayer = allPlayers.find(p => p && p !== 'BAY' && (cellStr === normName(p) || cellStr.includes(normName(p)) || normName(p).includes(cellStr)));
+                      if (foundPlayer) break;
+                    }
+                  }
+                }
+                
+                if (foundPlayer) {
+                  // Net sütunundan al
+                  if (netCol !== -1 && row[netCol] !== undefined && row[netCol] !== '') {
+                    const val = parseFloat(String(row[netCol]).replace(',', '.'));
+                    if (!isNaN(val) && val >= -5 && val <= 15) {
+                      netScore = Math.round(val * 10) / 10;
+                    }
+                  }
+                  
+                  // Eğer Net bulunamadıysa D ve Y'den hesapla
+                  if (netScore === null && dCol !== -1 && row[dCol] !== undefined && row[dCol] !== '') {
+                    const d = parseInt(row[dCol], 10) || 0;
+                    const y = yCol !== -1 ? (parseInt(row[yCol], 10) || 0) : 0;
+                    if (d >= 0 && d <= 15) {
+                      netScore = Math.round((d - (y / 3)) * 10) / 10;
+                    }
+                  }
+                  
+                  if (netScore !== null) {
+                    results[foundPlayer] = Math.min(15, Math.max(-5, netScore));
+                  }
+                }
+              });
+            });
+            
+            resolve(results);
+          } catch (err) { reject(err); }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    async function handleAutoUpload(event) {
+      const file = event.target.files[0]; if (!file) return;
+      const week = parseInt(document.getElementById('autoUploadWeekSelect').value, 10);
+      const previewArea = document.getElementById('autoPreviewArea');
+      
+      const labelEl = event.target.parentElement; const originalText = labelEl.innerHTML;
+      labelEl.innerHTML = "⏳ İşleniyor..."; previewArea.innerHTML = "";
+      
+      try {
+        let extractedScores = {};
+        if (file.name.toLowerCase().endsWith('.pdf')) { extractedScores = await extractFromPDF(file); }
+        else { extractedScores = await extractFromExcel(file); }
+        
+        let updates = []; let foundCount = 0; let totalExpected = 0; let matchCards = "";
+        
+        Object.keys(leagueData.groups || {}).sort().forEach(g => {
+          const fixtures = leagueData.fixtures[g] || [];
+          const weekData = fixtures.find(w => w.week === week);
+          if (!weekData) return;
+          
+          let groupHtml = `<div class="mb-6"><h3 class="font-bold text-lg text-slate-800 mb-3 border-b pb-1">Grup ${g}</h3><div class="grid grid-cols-1 lg:grid-cols-2 gap-4">`;
+          
+          weekData.matches.forEach(m => {
+            if(m.home === 'BAY' || m.away === 'BAY') return;
+            totalExpected += 2;
+            
+            let hScore = extractedScores[m.home];
+            if (hScore === undefined && leagueData.bots.includes(normName(m.home))) hScore = 14;
+            
+            let aScore = extractedScores[m.away];
+            if (aScore === undefined && leagueData.bots.includes(normName(m.away))) aScore = 14;
+            
+            if (hScore !== undefined) foundCount++;
+            if (aScore !== undefined) foundCount++;
+            
+            if (hScore !== undefined || aScore !== undefined) {
+              updates.push({ matchId: m.id, homeScore: hScore !== undefined ? hScore : (leagueData.results[m.id]?.homeScore ?? ''), awayScore: aScore !== undefined ? aScore : (leagueData.results[m.id]?.awayScore ?? '') });
+            }
+            
+            groupHtml += `
+              <div class="flex items-center justify-between bg-white border border-slate-200 p-3 rounded-lg shadow-sm">
+                <div class="flex-1 text-right text-sm font-semibold truncate ${hScore !== undefined ? 'text-slate-800' : 'text-red-400'}">${m.home}</div>
+                <div class="mx-3 flex gap-1 font-mono font-bold">
+                  <span class="w-12 text-center bg-slate-100 rounded py-0.5 text-sm">${hScore !== undefined ? formatNet(hScore) : '?'}</span>-
+                  <span class="w-12 text-center bg-slate-100 rounded py-0.5 text-sm">${aScore !== undefined ? formatNet(aScore) : '?'}</span>
+                </div>
+                <div class="flex-1 text-left text-sm font-semibold truncate ${aScore !== undefined ? 'text-slate-800' : 'text-red-400'}">${m.away}</div>
+              </div>`;
+          });
+          groupHtml += `</div></div>`;
+          if (weekData.matches.length > 0) matchCards += groupHtml;
+        });
+
+        previewArea.innerHTML = `
+          <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 mb-6 shadow-sm">
+            <h3 class="text-indigo-900 font-bold text-lg mb-2">📊 Önizleme Raporu (Net Puanlar)</h3>
+            <p class="text-indigo-700 font-medium">Sistem bu haftaki <b>${totalExpected}</b> oyuncudan <b>${foundCount}</b> tanesinin net sonucunu buldu (Botlar otomatik eklendi).</p>
+            ${foundCount < totalExpected ? `<p class="text-red-600 font-bold text-sm mt-2">⚠️ Bulunamayan isimler kırmızı ile işaretlendi.</p>` : `<p class="text-emerald-600 font-bold text-sm mt-2">✅ Bütün öğrenciler eksiksiz bulundu!</p>`}
+            <button id="btnAutoApply" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-md transition-all" onclick='applyAutoUpload(${JSON.stringify(updates)})'>Bu Sonuçları Kaydet</button>
+          </div>
+          ${matchCards}
+        `;
+      } catch (error) {
+        console.error(error);
+        previewArea.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200">❌ <b>Hata Oluştu</b><br>${error.message}</div>`;
+      }
+      labelEl.innerHTML = originalText; event.target.value = '';
+    }
+
+    function applyAutoUpload(updates) {
+      updates.forEach(u => {
+        if (!leagueData.results[u.matchId]) leagueData.results[u.matchId] = {};
+        if (u.homeScore !== '') leagueData.results[u.matchId].homeScore = parseNet(u.homeScore);
+        if (u.awayScore !== '') leagueData.results[u.matchId].awayScore = parseNet(u.awayScore);
+      });
+      saveData();
+      alert("✅ Net sonuçlar başarıyla kaydedildi!");
+      document.getElementById('autoPreviewArea').innerHTML = '';
+      
+      const btnStandings = document.getElementById('btnTabStandings');
+      showTab('standings', btnStandings);
+      
+      const selS = document.getElementById('standingsGroupSelect');
+      if (selS && selS.options.length > 1){ selS.selectedIndex = 1; showStandings(); }
+    }
+
+    // ---------- MANUAL DATA ENTRY ----------
+    let pendingUpdates = [];
+    function previewFromPaste(){
+      const raw = document.getElementById('pasteInput').value.trim();
+      const g = document.getElementById('dataGroupSelect').value;
+      const w = parseInt(document.getElementById('dataWeekSelect').value,10);
+      const out = document.getElementById('previewArea');
+      const btn = document.getElementById('btnApplyTop');
+      if (!raw || !g) { out.innerHTML = '<div class="text-red-500 font-bold">Lütfen grup seçin ve veri girin.</div>'; return; }
+      
+      const scores = {};
+      raw.split('\n').forEach(line => {
+        const p = line.trim().split(/[\t]+|,\s*|;\s*|\s{2,}/);
+        if (p.length >= 2){
+          const name = normName(p[0]); 
+          const score = parseNet(p[p.length-1]);
+          if (name && score !== '') scores[name] = score;
+        }
+      });
+      
+      const weekMatches = (leagueData.fixtures[g]||[]).find(x=>x.week===w)?.matches||[];
+      let html = '<div class="space-y-2">'; pendingUpdates = [];
+      weekMatches.forEach(m => {
+        if (m.home==='BAY' || m.away==='BAY') return;
+        let hs = scores[m.home], as = scores[m.away];
+        
+        if (hs === undefined && leagueData.bots.includes(normName(m.home))) hs = 14;
+        if (as === undefined && leagueData.bots.includes(normName(m.away))) as = 14;
+        
+        if (hs!==undefined || as!==undefined) {
+          pendingUpdates.push({ id: m.id, hs, as });
+          html += `<div class="flex items-center gap-2 bg-white p-2 rounded border border-slate-200">
+            <span class="flex-1 text-right text-sm ${hs===undefined?'text-red-400':'text-slate-800'}">${m.home}</span>
+            <span class="px-2 font-bold bg-slate-100 rounded">${hs===undefined?'-':formatNet(hs)} : ${as===undefined?'-':formatNet(as)}</span>
+            <span class="flex-1 text-sm ${as===undefined?'text-red-400':'text-slate-800'}">${m.away}</span>
+          </div>`;
+        }
+      });
+      html += '</div>';
+      if (pendingUpdates.length > 0){
+        out.innerHTML = html; btn.disabled = false; btn.classList.remove('btn-disabled');
+      } else {
+        out.innerHTML = '<div class="text-red-500 font-bold">Girilen metinde, bu haftaki eşleşmelerle uyuşan isim bulunamadı.</div>';
+      }
+    }
+
+    function applyFromTop(){
+      pendingUpdates.forEach(u => {
+        if (!leagueData.results[u.id]) leagueData.results[u.id] = {};
+        if (u.hs !== undefined) leagueData.results[u.id].homeScore = parseNet(u.hs);
+        if (u.as !== undefined) leagueData.results[u.id].awayScore = parseNet(u.as);
+      });
+      saveData(); document.getElementById('pasteInput').value = ''; document.getElementById('previewArea').innerHTML = '';
+      document.getElementById('btnApplyTop').disabled = true; document.getElementById('btnApplyTop').classList.add('btn-disabled');
+      alert("✅ Sonuçlar başarıyla kaydedildi!");
+    }
+
+    // ---------- INIT ----------
+    document.addEventListener('DOMContentLoaded', ()=>{
+      loadData();
+      Object.keys(leagueData.groups || {}).forEach(g=>{ ensureFixturesForGroup(g); buildMatchIndex(g); });
+      populateGroupSelects(); createDownloadableBackup();
+      const selS=document.getElementById('standingsGroupSelect');
+      if (selS && selS.options.length>1){ selS.selectedIndex=1; showStandings(); }
+      fillUpcomingWeekSelect(true); showUpcoming(); renderMiniStandings();
+      if (document.getElementById('setupStudentList')) calculateSetup();
+      renderSetupState();
+    });
+  </script>
+  <a id="downloadBackup" style="display:none"></a>
+</body>
+</html>
