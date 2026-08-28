@@ -43,10 +43,7 @@
           <div class="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-3 rounded-xl text-2xl shadow-lg transform -rotate-3">🏆</div>
           <div>
             <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Matematik Ligi</h1>
-            <div class="flex items-center gap-2 mt-0.5">
-              <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Yönetim & Takip Sistemi</p>
-              <span id="cloudSyncStatus" class="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">🟢 Canlı Bulut</span>
-            </div>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">Yönetim Paneli</p>
           </div>
         </div>
         
@@ -316,12 +313,6 @@
           showUpcoming();
           renderMiniStandings();
           renderSetupState();
-
-          const syncBadge = document.getElementById('cloudSyncStatus');
-          if (syncBadge) {
-            syncBadge.innerHTML = '🟢 Canlı Bulut Bağlı';
-            syncBadge.className = 'text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200';
-          }
         }
       }, (error) => {
         console.warn("Firebase dinleme:", error);
