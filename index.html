@@ -153,6 +153,7 @@
         <button onclick="showAdminTab('dataentry', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 border-b-2 border-transparent">📥 Manuel Giriş</button>
         <button onclick="showAdminTab('adminPlayoffs', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 border-b-2 border-transparent">🏆 Turlar Yönetimi</button>
         <button onclick="showAdminTab('setup', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 border-b-2 border-transparent">⚙️ İlk Kurulum</button>
+        <button onclick="showAdminTab('settings', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 border-b-2 border-transparent">⚙️ Ayarlar</button>
         <button onclick="adminLogout()" class="text-xs font-bold text-red-600 hover:text-red-700 ml-auto px-3 py-1.5 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors shadow-sm">🔒 Çıkış Yap</button>
       </div>
 
@@ -312,6 +313,20 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+      
+      <!-- 6. AYARLAR -->
+      <div id="settings" class="admin-content hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
+          <h2 class="text-2xl font-bold text-slate-900 mb-2">⚙️ Görünüm Ayarları</h2>
+          <p class="text-slate-600 mb-6 max-w-4xl">Sitenin arka plan şeffaflığını ayarlayın. Yaptığınız ayar kaydedildiğinde tüm ziyaretçiler için geçerli olacaktır.</p>
+          <div class="flex items-center gap-4 mb-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
+             <label class="font-bold text-slate-700">Arka Plan Şeffaflığı:</label>
+             <input type="range" id="bgOpacitySlider" min="0" max="100" value="88" oninput="previewBgOpacity(this.value)" class="flex-1 cursor-pointer accent-indigo-600">
+             <span id="bgOpacityVal" class="font-mono font-bold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-lg">88% (Standart)</span>
+          </div>
+          <button onclick="saveBgOpacity()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-3 rounded-xl shadow-md transition-all">Kaydet ve Yayınla</button>
         </div>
       </div>
       
@@ -546,6 +561,12 @@
       const saved = localStorage.getItem(getStorageKey());
       if (saved) { try { leagueData = { matchIndex:{}, bots:[], ...JSON.parse(saved) }; } catch(e){} }
       if (!leagueData.bots) leagueData.bots = [];
+      let op = leagueData.bgOpacity !== undefined ? leagueData.bgOpacity : 88;
+      document.body.style.backgroundImage = `linear-gradient(rgba(248, 250, 252, ${op/100}), rgba(248, 250, 252, ${op/100})), url('https://i.imgur.com/y65pM0O.png')`;
+      if (document.getElementById('bgOpacitySlider')) {
+        document.getElementById('bgOpacitySlider').value = op;
+        document.getElementById('bgOpacityVal').innerText = op + '%';
+      }
     }
 
     // ---------- UI Tab Kontrolleri ----------
@@ -2264,6 +2285,19 @@
       checkGradeModal();
       if (document.getElementById('setupStudentList')) calculateSetup();
     });
+    
+    // ---------- Görünüm Ayarları ----------
+    window.previewBgOpacity = function(val) {
+      document.getElementById('bgOpacityVal').innerText = val + '%';
+      document.body.style.backgroundImage = `linear-gradient(rgba(248, 250, 252, ${val/100}), rgba(248, 250, 252, ${val/100})), url('https://i.imgur.com/y65pM0O.png')`;
+    };
+    
+    window.saveBgOpacity = function() {
+      const val = parseInt(document.getElementById('bgOpacitySlider').value);
+      leagueData.bgOpacity = val;
+      saveData();
+      alert("✅ Arka plan şeffaflık ayarı başarıyla kaydedildi! Sitenizi ziyaret eden herkes için bu görünüm geçerli olacaktır.");
+    };
   </script>
   <a id="downloadBackup" style="display:none"></a>
 </body>
