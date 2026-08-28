@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Matematik Ligi</title>
-  <link rel="icon" type="image/png" href="https://i.imgur.com/TBxyw5u.png">
-  <link rel="apple-touch-icon" href="https://i.imgur.com/TBxyw5u.png">
+  <link rel="icon" type="image/png" href="https://i.imgur.com/h3GxMAP.png">
+  <link rel="apple-touch-icon" href="https://i.imgur.com/h3GxMAP.png">
   <script src="https://cdn.tailwindcss.com"></script>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -189,7 +189,7 @@
       <!-- 2. SONUÇ YÜKLEME -->
       <div id="autoupload" class="admin-content hidden">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8 relative">
-          <h2 class="text-3xl font-extrabold text-slate-900 mb-2">🚀 Akıllı Sonuç Yükleme</h2>
+          <h2 class="text-3xl font-extrabold text-slate-900 mb-2">🚀 Sonuç Yükleme</h2>
           <p class="text-slate-600 mb-8 max-w-3xl text-lg">PDF veya Excel sonuç listesini yükleyin. Yapay zeka tüm öğrencileri tanıyıp skorları tek tuşla sisteme işlesin.</p>
           <div class="flex flex-col md:flex-row gap-6 mb-8 bg-slate-50 border border-slate-200 rounded-2xl p-6 shadow-sm">
             <div class="w-full md:w-1/3">
@@ -1281,12 +1281,14 @@
           if (weekData.matches.length > 0) matchCards += groupHtml;
         });
 
+        latestAutoUploadUpdates = updates;
+
         previewArea.innerHTML = `
           <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 mb-6 shadow-sm">
             <h3 class="text-indigo-900 font-bold text-lg mb-2">📊 Önizleme Raporu (Net Puanlar)</h3>
             <p class="text-indigo-700 font-medium">Sistem bu haftaki <b>${totalExpected}</b> oyuncudan <b>${foundCount}</b> tanesinin net sonucunu buldu (Botlar otomatik eklendi).</p>
             ${foundCount < totalExpected ? `<p class="text-red-600 font-bold text-sm mt-2">⚠️ Bulunamayan isimler kırmızı ile işaretlendi.</p>` : `<p class="text-emerald-600 font-bold text-sm mt-2">✅ Bütün öğrenciler eksiksiz bulundu!</p>`}
-            <button id="btnAutoApply" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-md transition-all" onclick='applyAutoUpload(${JSON.stringify(updates)})'>Bu Sonuçları Kaydet</button>
+            <button id="btnAutoApply" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-md transition-all cursor-pointer" onclick="applyAutoUpload()">Sonuçları Aktar</button>
           </div>
           ${matchCards}
         `;
@@ -1297,14 +1299,20 @@
       labelEl.innerHTML = originalText; event.target.value = '';
     }
 
-    function applyAutoUpload(updates) {
-      updates.forEach(u => {
+    let latestAutoUploadUpdates = [];
+
+    function applyAutoUpload() {
+      if (!latestAutoUploadUpdates || latestAutoUploadUpdates.length === 0) {
+        alert("⚠️ Aktarılacak sonuç bulunamadı.");
+        return;
+      }
+      latestAutoUploadUpdates.forEach(u => {
         if (!leagueData.results[u.matchId]) leagueData.results[u.matchId] = {};
         if (u.homeScore !== '') leagueData.results[u.matchId].homeScore = parseNet(u.homeScore);
         if (u.awayScore !== '') leagueData.results[u.matchId].awayScore = parseNet(u.awayScore);
       });
       saveData();
-      alert("✅ Net sonuçlar başarıyla kaydedildi!");
+      alert("✅ Net sonuçlar başarıyla sisteme aktarıldı ve puan durumu güncellendi!");
       document.getElementById('autoPreviewArea').innerHTML = '';
       
       const btnStandings = document.getElementById('btnTabStandings');
@@ -1312,6 +1320,7 @@
       
       const selS = document.getElementById('standingsGroupSelect');
       if (selS && selS.options.length > 1){ selS.selectedIndex = 1; showStandings(); }
+      renderMiniStandings();
     }
 
     // ---------- MANUAL DATA ENTRY ----------
