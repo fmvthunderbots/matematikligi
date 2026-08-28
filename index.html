@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Matematik Ligi</title>
+  <link rel="icon" type="image/png" href="https://i.imgur.com/TBxyw5u.png">
+  <link rel="apple-touch-icon" href="https://i.imgur.com/TBxyw5u.png">
   <script src="https://cdn.tailwindcss.com"></script>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -134,6 +136,19 @@
 
     <!-- YÖNETİM PANELİ -->
     <div id="adminPanel" class="tab-content">
+      <!-- Bulut Yayın Çubuğu -->
+      <div class="mb-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-3.5 sm:p-4 rounded-2xl shadow-md flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div class="flex items-center gap-2.5">
+          <span id="cloudStatusDot" class="w-3 h-3 rounded-full bg-emerald-400"></span>
+          <span id="cloudStatusText" class="text-xs sm:text-sm font-bold text-slate-200">🟢 Bulut Senkronizasyonu Aktif</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="publishToCloud()" class="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs sm:text-sm font-black px-4 py-2 rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+            <span>📢 Tüm Cihazlara Yayınla</span>
+          </button>
+        </div>
+      </div>
+
       <div class="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
         <button onclick="showAdminTab('fixtures', this)" class="admin-tab-btn active font-bold text-indigo-600 px-4 py-2 border-b-2 border-indigo-600">🎮 Maç Yönetimi</button>
         <button onclick="showAdminTab('autoupload', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 border-b-2 border-transparent">🚀 Sonuç Yükleme</button>
@@ -341,10 +356,10 @@
     // Firebase Canlı Veritabanı Yapılandırması
     const firebaseConfig = {
       apiKey: "AIzaSyCSjooemwGE-TZE_5lepq5TugIO7wmhtmw",
-      authDomain: "matematik-ligi.firebaseapp.com",
-      databaseURL: "https://matematik-ligi-default-rtdb.firebaseio.com",
-      projectId: "matematik-ligi",
-      storageBucket: "matematik-ligi.firebasestorage.app",
+      authDomain: "matematikligi-9fbba.firebaseapp.com",
+      databaseURL: "https://matematikligi-9fbba-default-rtdb.firebaseio.com",
+      projectId: "matematikligi-9fbba",
+      storageBucket: "matematikligi-9fbba.firebasestorage.app",
       messagingSenderId: "445925711828",
       appId: "1:445925711828:web:9408b1915542db01eac041",
       measurementId: "G-35H78VZSJE"
@@ -412,10 +427,30 @@
       }
     }
 
+    function updateCloudStatus(isOnline, errMsg) {
+      const dot = document.getElementById('cloudStatusDot');
+      const txt = document.getElementById('cloudStatusText');
+      if (dot && txt) {
+        if (isOnline) {
+          dot.className = "w-3 h-3 rounded-full bg-emerald-400";
+          txt.innerHTML = `🟢 Bulut Senkronizasyonu Aktif (${currentGrade}. Sınıf)`;
+          txt.className = "text-xs sm:text-sm font-bold text-emerald-300";
+        } else {
+          dot.className = "w-3 h-3 rounded-full bg-rose-500 animate-ping";
+          txt.innerHTML = `🔴 Bulut İzni Kapalı (Kurallar: read/write true yapılmalı)`;
+          txt.className = "text-xs sm:text-sm font-bold text-rose-300";
+        }
+      }
+    }
+
     // Canlı Bulut Senkronizasyonu
     function initFirebaseSync() {
-      if (!leagueRef) return;
+      if (!leagueRef) {
+        updateCloudStatus(false, 'Bağlantı Yok');
+        return;
+      }
       leagueRef.on('value', (snapshot) => {
+        updateCloudStatus(true);
         const data = snapshot.val();
         if (data && data.groups && Object.keys(data.groups).length > 0) {
           leagueData = { matchIndex: {}, bots: [], ...data };
@@ -440,7 +475,28 @@
         }
       }, (error) => {
         console.warn("Firebase dinleme:", error);
+        updateCloudStatus(false, error.message);
       });
+    }
+
+    async function publishToCloud() {
+      if (!leagueRef) {
+        alert("⚠️ Firebase bağlantısı kurulamadı.");
+        return;
+      }
+      try {
+        await leagueRef.set(leagueData);
+        updateCloudStatus(true);
+        alert(`✅ ${currentGrade}. Sınıf verileri başarıyla buluta yüklendi ve yayınlandı!\n\nArtık tüm öğretmenler ve öğrenciler fmvthunderbots.github.io/matematikligi/ adresinden bu güncel verileri görebilir.`);
+      } catch (err) {
+        console.error("Yayınlama hatası:", err);
+        updateCloudStatus(false, err.message);
+        if (err.message && (err.message.includes('PERMISSION_DENIED') || err.message.includes('permission'))) {
+          alert("❌ Firebase İzin Hatası (PERMISSION_DENIED)\n\nVeritabanı dışarıdan okuma/yazmaya kapalı olduğu için başka tarayıcılarda görünmüyor.\n\nÇözüm (30 Saniye):\n1. console.firebase.google.com adresine gidin\n2. 'matematik-ligi' projesini açın\n3. Soldan 'Build' -> 'Realtime Database' -> üstten 'Kurallar (Rules)' sekmesine tıklayın\n4. Kuralları şu şekilde değiştirip 'Yayınla (Publish)' butonuna basın:\n\n{\n  \"rules\": {\n    \".read\": true,\n    \".write\": true\n  }\n}");
+        } else {
+          alert("❌ Buluta yüklenirken hata oluştu: " + err.message);
+        }
+      }
     }
 
     // ---------- Yedek ----------
@@ -481,8 +537,11 @@
       
       // Canlı Firebase veritabanına yaz
       if (leagueRef) {
-        leagueRef.set(leagueData).catch(err => {
+        leagueRef.set(leagueData).then(() => {
+          updateCloudStatus(true);
+        }).catch(err => {
           console.error("Firebase bulut kayıt hatası:", err);
+          updateCloudStatus(false, err.message);
         });
       }
     }
