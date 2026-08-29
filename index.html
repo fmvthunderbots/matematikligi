@@ -20,11 +20,14 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
+  <!-- EmailJS SDK (Opsiyonel Arka Plan E-Posta Gönderimi) -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
   <style>
     body { 
       font-family: 'Inter', sans-serif; 
       background-color: #f8fafc;
-      background-image: linear-gradient(rgba(248, 250, 252, 0.88), rgba(248, 250, 252, 0.88)), url('https://i.imgur.com/y65pM0O.png');
+      background-image: linear-gradient(rgba(248, 250, 252, 0.59), rgba(248, 250, 252, 0.59)), url('https://i.imgur.com/y65pM0O.png');
       background-repeat: repeat;
       background-size: 850px auto;
       background-attachment: fixed;
@@ -151,9 +154,9 @@
         <button onclick="showAdminTab('autoupload', this)" class="admin-tab-btn active font-bold text-indigo-600 px-4 py-2 bg-indigo-50 rounded-xl">🚀 Sonuç Yükleme</button>
         <button onclick="showAdminTab('fixtures', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">🎮 Maç Yönetimi</button>
         <button onclick="showAdminTab('dataentry', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">📥 Manuel Giriş</button>
-        <button onclick="showAdminTab('adminPlayoffs', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">🏆 Turlar Yönetimi</button>
+        <button onclick="showAdminTab('adminPlayoffs', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">🏆 Turların Yönetimi</button>
         <button onclick="showAdminTab('setup', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">⚙️ İlk Kurulum</button>
-        <button onclick="showAdminTab('settings', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">⚙️ Ayarlar</button>
+        <button onclick="showAdminTab('settings', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">📢 Duyuru</button>
         <button onclick="adminLogout()" class="text-xs font-bold text-red-600 hover:text-red-700 ml-auto px-3 py-1.5 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors shadow-sm">🔒 Çıkış Yap</button>
       </div>
 
@@ -319,36 +322,63 @@
       <!-- 6. AYARLAR -->
       <div id="settings" class="admin-content hidden">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
-          <h2 class="text-2xl font-bold text-slate-900 mb-2">⚙️ Görünüm Ayarları</h2>
-          <p class="text-slate-600 mb-6 max-w-4xl">Sitenin arka plan şeffaflığını ayarlayın. Yaptığınız ayar kaydedildiğinde tüm ziyaretçiler için geçerli olacaktır.</p>
-          <div class="flex items-center gap-4 mb-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
-             <label class="font-bold text-slate-700">Arka Plan Şeffaflığı:</label>
-             <input type="range" id="bgOpacitySlider" min="0" max="100" value="88" oninput="previewBgOpacity(this.value)" class="flex-1 cursor-pointer accent-indigo-600">
-             <span id="bgOpacityVal" class="font-mono font-bold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-lg">88% (Standart)</span>
-          </div>
-          <button onclick="saveBgOpacity()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-3 rounded-xl shadow-md transition-all">Kaydet ve Yayınla</button>
-          
-          <div class="mt-12 border-t border-slate-200 pt-10">
-            <h2 class="text-2xl font-bold text-slate-900 mb-2">📩 Otomatik Bilgilendirme Sistemi</h2>
-            <p class="text-slate-600 mb-6 max-w-4xl">Sitedeki veriler güncellendiğinde tüm zümre öğretmenlerine tek tıkla otomatik e-posta gönderin. Sistem, gizliliği korumak için adresleri BCC'ye ekler.</p>
+          <div>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+              <h2 class="text-2xl font-bold text-slate-900">📩 Otomatik Bilgilendirme Sistemi (<span id="infoGradeTitle">6. Sınıflar</span>)</h2>
+              <span class="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-lg self-start sm:self-auto">Aktif Kademe: <span id="infoGradeBadge">6. Sınıflar</span></span>
+            </div>
+            <p class="text-slate-600 mb-6 max-w-4xl">Sitedeki veriler güncellendiğinde bu kademedeki zümre öğretmenlerine tek tıkla e-posta gönderin. Mesajı dilediğiniz gibi düzenleyebilir ve kaydedebilirsiniz.</p>
             
             <div class="bg-blue-50 border border-blue-200 p-6 rounded-2xl mb-6 shadow-sm">
-              <label class="font-bold text-blue-900 block mb-2">Kayıtlı Öğretmen E-Posta Adresleri (Virgülle ayırın):</label>
-              <textarea id="teacherEmails" rows="3" class="w-full bg-white border border-blue-300 rounded-xl p-4 font-mono text-sm focus:ring-2 focus:ring-blue-500 outline-none mb-4" placeholder="ornek1@fmvisik.k12.tr, ornek2@fmvisik.k12.tr"></textarea>
+              <label class="font-bold text-blue-900 block mb-2">📬 Kayıtlı Öğretmen E-Posta Adresleri (Virgülle ayırın):</label>
+              <textarea id="teacherEmails" rows="2" class="w-full bg-white border border-blue-300 rounded-xl p-3 font-mono text-sm focus:ring-2 focus:ring-blue-500 outline-none mb-4" placeholder="ornek1@fmvisik.k12.tr, ornek2@fmvisik.k12.tr"></textarea>
+
+              <div class="flex items-center justify-between mb-2">
+                <label class="font-bold text-blue-900">📝 Gönderilecek Mesaj Metni (Düzenleyebilirsiniz):</label>
+                <button type="button" onclick="resetEmailTemplateToDefault()" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold hover:underline">🔄 Varsayılan Şablona Sıfırla</button>
+              </div>
+              <textarea id="emailMessageText" rows="5" class="w-full bg-white border border-blue-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none mb-4 font-sans leading-relaxed"></textarea>
+
               <div class="flex flex-wrap gap-3">
-                <button onclick="saveTeacherEmails()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-sm transition-all">💾 E-Posta Listesini Kaydet</button>
-                <button onclick="sendNotificationEmail()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2">
-                   <span>✉️ Güncellemeyi Öğretmenlere Bildir (Mail At)</span>
+                <button onclick="saveNotificationSettings()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2">
+                  <span>💾 Ayarları ve Mesajı Kaydet</span>
+                </button>
+                <button onclick="sendNotificationEmail()" id="btnSendNotification" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-5 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2">
+                   <span>✉️ Güncellemeyi Öğretmenlere Bildir (Mail Gönder)</span>
                 </button>
               </div>
             </div>
 
+            <!-- EmailJS Tam Otomatik Gönderim Entegrasyonu (İsteğe Bağlı) -->
             <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-              <label class="font-bold text-slate-700 block mb-3">Gidecek Örnek Mesaj Şablonu:</label>
-              <div class="text-sm font-mono text-slate-600 whitespace-pre-wrap leading-relaxed">Merhaba arkadaşlar,
-Matematik Ligi sistemindeki veriler güncellenmiştir. 
-Portal üzerinden inceleyebilirsiniz.
-İyi çalışmalar.</div>
+              <div class="flex items-center justify-between cursor-pointer" onclick="toggleEmailJSDetails()">
+                <div>
+                  <h3 class="font-bold text-slate-800 text-base flex flex-wrap items-center gap-2">
+                    <span>⚡ Arka Planda Sessiz / Otomatik Gönderim (EmailJS)</span>
+                    <span id="emailJsStatusBadge" class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200">Uygulama Modu (Varsayılan)</span>
+                  </h3>
+                  <p class="text-xs text-slate-500 mt-1">Mail uygulamanız açılmadan tek tıkla doğrudan arka plandan e-posta gitmesini isterseniz EmailJS bilgilerinizi buradan girebilirsiniz.</p>
+                </div>
+                <button type="button" class="text-slate-400 hover:text-slate-600 text-sm font-bold ml-4">⚙️ Detay</button>
+              </div>
+              
+              <div id="emailJsConfigSection" class="mt-4 pt-4 border-t border-slate-200 hidden">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                  <div>
+                    <label class="text-xs font-bold text-slate-700 block mb-1">EmailJS Public Key:</label>
+                    <input type="text" id="emailjsPublicKey" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono" placeholder="Örn: user_xxxx veya xxx">
+                  </div>
+                  <div>
+                    <label class="text-xs font-bold text-slate-700 block mb-1">Service ID (Gmail):</label>
+                    <input type="text" id="emailjsServiceId" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono" placeholder="Örn: service_xxxx">
+                  </div>
+                  <div>
+                    <label class="text-xs font-bold text-slate-700 block mb-1">Template ID:</label>
+                    <input type="text" id="emailjsTemplateId" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono" placeholder="Örn: template_xxxx">
+                  </div>
+                </div>
+                <button onclick="saveEmailJsConfig()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs px-4 py-2 rounded-lg transition-all">EmailJS Bilgilerini Kaydet</button>
+              </div>
             </div>
           </div>
 
@@ -586,14 +616,22 @@ Portal üzerinden inceleyebilirsiniz.
       const saved = localStorage.getItem(getStorageKey());
       if (saved) { try { leagueData = { matchIndex:{}, bots:[], ...JSON.parse(saved) }; } catch(e){} }
       if (!leagueData.bots) leagueData.bots = [];
-      let op = leagueData.bgOpacity !== undefined ? leagueData.bgOpacity : 88;
+      let op = 59;
       document.body.style.backgroundImage = `linear-gradient(rgba(248, 250, 252, ${op/100}), rgba(248, 250, 252, ${op/100})), url('https://i.imgur.com/y65pM0O.png')`;
-      if (document.getElementById('bgOpacitySlider')) {
-        document.getElementById('bgOpacitySlider').value = op;
-        document.getElementById('bgOpacityVal').innerText = op + '%';
-      }
       if (document.getElementById('teacherEmails')) {
         document.getElementById('teacherEmails').value = leagueData.teacherEmails || '';
+      }
+      if (document.getElementById('emailMessageText')) {
+        document.getElementById('emailMessageText').value = leagueData.customEmailMessage || getDefaultEmailMessage(currentGrade);
+      }
+      if (document.getElementById('infoGradeTitle')) {
+        document.getElementById('infoGradeTitle').innerText = `${currentGrade}. Sınıflar`;
+      }
+      if (document.getElementById('infoGradeBadge')) {
+        document.getElementById('infoGradeBadge').innerText = `${currentGrade}. Sınıflar`;
+      }
+      if (typeof loadEmailJsConfig === 'function') {
+        loadEmailJsConfig();
       }
     }
 
@@ -2317,36 +2355,117 @@ Portal üzerinden inceleyebilirsiniz.
       if (document.getElementById('setupStudentList')) calculateSetup();
     });
     
-    // ---------- Görünüm Ayarları ----------
-    window.previewBgOpacity = function(val) {
-      document.getElementById('bgOpacityVal').innerText = val + '%';
-      document.body.style.backgroundImage = `linear-gradient(rgba(248, 250, 252, ${val/100}), rgba(248, 250, 252, ${val/100})), url('https://i.imgur.com/y65pM0O.png')`;
-    };
-    
-    window.saveBgOpacity = function() {
-      const val = parseInt(document.getElementById('bgOpacitySlider').value);
-      leagueData.bgOpacity = val;
-      saveData();
-      alert("✅ Arka plan şeffaflık ayarı başarıyla kaydedildi! Sitenizi ziyaret eden herkes için bu görünüm geçerli olacaktır.");
+
+
+    function getDefaultEmailMessage(grade) {
+      const g = grade || currentGrade || '6';
+      return `Merhaba arkadaşlar,\n${g}. Sınıflar Matematik Ligi sistemindeki veriler güncellenmiştir. \nPortal üzerinden inceleyebilirsiniz.\nİyi çalışmalar.`;
+    }
+
+    window.resetEmailTemplateToDefault = function() {
+      const defaultText = getDefaultEmailMessage(currentGrade);
+      const el = document.getElementById('emailMessageText');
+      if (el) el.value = defaultText;
     };
 
-    window.saveTeacherEmails = function() {
+    window.saveNotificationSettings = function() {
       const emails = document.getElementById('teacherEmails').value.trim();
+      const msg = document.getElementById('emailMessageText').value.trim();
       leagueData.teacherEmails = emails;
+      leagueData.customEmailMessage = msg;
       saveData();
-      alert("✅ E-Posta listesi başarıyla kaydedildi!");
+      alert(`✅ ${currentGrade}. Sınıflar için e-posta listesi ve mesaj metni başarıyla kaydedildi!`);
     };
 
-    window.sendNotificationEmail = function() {
-      const emails = document.getElementById('teacherEmails').value.trim();
-      if (!emails) {
+    window.toggleEmailJSDetails = function() {
+      const sec = document.getElementById('emailJsConfigSection');
+      if (sec) sec.classList.toggle('hidden');
+    };
+
+    function loadEmailJsConfig() {
+      try {
+        const cfg = JSON.parse(localStorage.getItem('mathLeagueEmailJsConfig') || '{}');
+        const pubKey = cfg.publicKey || 'YS9oy9qMdJ1a1r9ZS';
+        const srvId = cfg.serviceId || 'service_joww66c';
+        const tplId = cfg.templateId || 'template_dsjts1k';
+
+        if (document.getElementById('emailjsPublicKey')) document.getElementById('emailjsPublicKey').value = pubKey;
+        if (document.getElementById('emailjsServiceId')) document.getElementById('emailjsServiceId').value = srvId;
+        if (document.getElementById('emailjsTemplateId')) document.getElementById('emailjsTemplateId').value = tplId;
+        
+        const badge = document.getElementById('emailJsStatusBadge');
+        if (badge) {
+          if (pubKey && srvId && tplId) {
+            badge.innerText = '⚡ EmailJS Aktif (Arka Planda Tam Otomatik)';
+            badge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200';
+          } else {
+            badge.innerText = 'Uygulama Modu (Varsayılan)';
+            badge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200';
+          }
+        }
+      } catch(e){}
+    }
+
+    window.saveEmailJsConfig = function() {
+      const publicKey = document.getElementById('emailjsPublicKey').value.trim();
+      const serviceId = document.getElementById('emailjsServiceId').value.trim();
+      const templateId = document.getElementById('emailjsTemplateId').value.trim();
+      
+      const cfg = { publicKey, serviceId, templateId };
+      localStorage.setItem('mathLeagueEmailJsConfig', JSON.stringify(cfg));
+      loadEmailJsConfig();
+      alert('✅ EmailJS ayarları kaydedildi!');
+    };
+
+    window.sendNotificationEmail = async function() {
+      const emailsInput = document.getElementById('teacherEmails').value.trim();
+      const msgInput = document.getElementById('emailMessageText').value.trim();
+      if (!emailsInput) {
         alert("⚠️ Lütfen önce e-posta adreslerini yazıp kaydedin.");
         return;
       }
-      const subject = encodeURIComponent(`Matematik Ligi (${currentGrade}. Sınıflar) - Sistem Güncellemesi`);
-      const body = encodeURIComponent(`Merhaba arkadaşlar,\nMatematik Ligi sistemindeki veriler güncellenmiştir.\nPortal üzerinden inceleyebilirsiniz.\nİyi çalışmalar.`);
       
-      window.location.href = `mailto:?bcc=${encodeURIComponent(emails)}&subject=${subject}&body=${body}`;
+      const messageBody = msgInput || getDefaultEmailMessage(currentGrade);
+      const subjectText = `Matematik Ligi (${currentGrade}. Sınıflar) - Sistem Güncellemesi`;
+
+      let cfg = {};
+      try { cfg = JSON.parse(localStorage.getItem('mathLeagueEmailJsConfig') || '{}'); } catch(e){}
+      const publicKey = cfg.publicKey || 'YS9oy9qMdJ1a1r9ZS';
+      const serviceId = cfg.serviceId || 'service_joww66c';
+      const templateId = cfg.templateId || 'template_dsjts1k';
+
+      const hasEmailJs = publicKey && serviceId && templateId && typeof emailjs !== 'undefined';
+
+      if (hasEmailJs) {
+        const btn = document.getElementById('btnSendNotification');
+        const origHtml = btn ? btn.innerHTML : '';
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<span>⏳ E-Posta Gönderiliyor...</span>';
+        }
+        try {
+          emailjs.init(publicKey);
+          const cleanEmailList = emailsInput.split(/[\n,;]+/).map(e => e.trim()).filter(e => e).join(', ');
+          await emailjs.send(serviceId, templateId, {
+            to_email: cleanEmailList,
+            subject: subjectText,
+            message: messageBody,
+            grade: currentGrade
+          });
+          alert(`✅ E-posta başarıyla gönderildi! (${currentGrade}. Sınıf öğretmenlerine arka planda otomatik iletildi)`);
+        } catch(err) {
+          console.error("EmailJS Hatası:", err);
+          alert("⚠️ EmailJS gönderiminde hata oluştu (" + (err.text || err.message || "Bilinmeyen hata") + "). Mail uygulamanız açılıyor...");
+          window.location.href = `mailto:?bcc=${encodeURIComponent(emailsInput)}&subject=${encodeURIComponent(subjectText)}&body=${encodeURIComponent(messageBody)}`;
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+          }
+        }
+      } else {
+        window.location.href = `mailto:?bcc=${encodeURIComponent(emailsInput)}&subject=${encodeURIComponent(subjectText)}&body=${encodeURIComponent(messageBody)}`;
+      }
     };
   </script>
   <a id="downloadBackup" style="display:none"></a>
