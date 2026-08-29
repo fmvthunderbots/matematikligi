@@ -23,6 +23,10 @@
   <!-- EmailJS SDK (Opsiyonel Arka Plan E-Posta Gönderimi) -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
+  <!-- html2canvas & JSZip (TV Dijital Pano Görsel Oluşturucu) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
   <style>
     body { 
       font-family: 'Inter', sans-serif; 
@@ -155,8 +159,9 @@
         <button onclick="showAdminTab('fixtures', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">🎮 Maç Yönetimi</button>
         <button onclick="showAdminTab('dataentry', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">📥 Manuel Giriş</button>
         <button onclick="showAdminTab('adminPlayoffs', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">🏆 Turların Yönetimi</button>
+        <button onclick="showAdminTab('broadcast', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">📢 Duyuru</button>
+        <button onclick="showAdminTab('emailSettings', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">📩 E-Posta</button>
         <button onclick="showAdminTab('setup', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">⚙️ İlk Kurulum</button>
-        <button onclick="showAdminTab('settings', this)" class="admin-tab-btn font-semibold text-slate-500 hover:text-slate-800 px-4 py-2 rounded-xl">📢 Duyuru</button>
         <button onclick="adminLogout()" class="text-xs font-bold text-red-600 hover:text-red-700 ml-auto px-3 py-1.5 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors shadow-sm">🔒 Çıkış Yap</button>
       </div>
 
@@ -319,8 +324,96 @@
         </div>
       </div>
       
-      <!-- 6. AYARLAR -->
-      <div id="settings" class="admin-content hidden">
+      <!-- 5. DİJİTAL PANO / TV DUYURU STÜDYOSU -->
+      <div id="broadcast" class="admin-content hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-6 border-b border-slate-100">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                <span>📢 TV & Dijital Pano Görsel Stüdyosu</span>
+                <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono">16:9 Full HD</span>
+              </h2>
+              <p class="text-sm text-slate-500 mt-1">Okul içi yatay TV ekranlarında yayınlamak için tek tıkla yüksek çözünürlüklü (1920x1080) Canva kalitesinde PNG görselleri oluşturun.</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="tvGradeBadge" class="text-xs font-extrabold px-3 py-1.5 rounded-xl bg-slate-900 text-white shadow-sm">6. Sınıflar</span>
+            </div>
+          </div>
+
+          <!-- Filtre ve Ayar Paneli -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 bg-slate-50 border border-slate-200 p-5 rounded-2xl">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Görsel Türü</label>
+              <select id="tvCategorySelect" onchange="onTvCategoryChange()" class="w-full bg-white border border-slate-300 text-slate-900 text-sm font-semibold rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="standings">📊 Lig Puan Durumu Tabloları</option>
+                <option value="weeklyMatches">⚽ Haftalık Maç Sonuçları</option>
+                <option value="playoffs">🏆 Eleme Turları Eşleşmeleri</option>
+              </select>
+            </div>
+
+            <div id="tvWeekSelectContainer" class="hidden">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Hafta Seçimi</label>
+              <select id="tvWeekSelect" onchange="renderTvSlides()" class="w-full bg-white border border-slate-300 text-slate-900 text-sm font-semibold rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
+              </select>
+            </div>
+
+            <div id="tvPlayoffRoundSelectContainer" class="hidden">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Eleme Turu Seçimi</label>
+              <select id="tvPlayoffRoundSelect" onchange="renderTvSlides()" class="w-full bg-white border border-slate-300 text-slate-900 text-sm font-semibold rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Özel Ana Başlık (İsteğe Bağlı)</label>
+              <input type="text" id="tvCustomTitleInput" oninput="renderTvSlides()" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Örn: 6. SINIFLAR MATEMATİK LİGİ" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Slayt Süresi (Video İçin)</label>
+              <div class="flex items-center gap-2">
+                <input type="number" id="tvSlideDurationInput" value="8" min="3" max="30" class="w-full bg-white border border-slate-300 text-slate-900 text-sm font-bold rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-indigo-500" />
+                <span class="text-xs font-bold text-slate-500">saniye</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Canlı Önizleme ve İndirme Kontrolleri -->
+          <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-md">
+            <div class="flex items-center gap-2">
+              <button onclick="prevTvSlide()" id="btnPrevTvSlide" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed">◀ Önceki Slayt</button>
+              <span id="tvSlideCounter" class="text-xs font-black text-indigo-300 font-mono px-3">Slayt 1 / 1</span>
+              <button onclick="nextTvSlide()" id="btnNextTvSlide" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed">Sonraki Slayt ▶</button>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="downloadCurrentTvSlide()" id="btnDownloadSingleTv" class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
+                <span>📸 Bu Slaytı İndir (PNG)</span>
+              </button>
+              <button onclick="downloadAllTvSlidesZip()" id="btnDownloadAllTv" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
+                <span>📦 Tüm Slaytları İndir (ZIP)</span>
+              </button>
+              <button onclick="downloadTvSlidesAsVideo()" id="btnDownloadVideoTv" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 text-xs font-extrabold px-4 py-2 rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer">
+                <span>🎬 Video Olarak İndir (MP4)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 16:9 Ekran Önizleme Kutusu -->
+          <div class="relative w-full rounded-2xl overflow-hidden border border-slate-300 shadow-xl bg-slate-950 flex items-center justify-center p-2 sm:p-4">
+            <div id="tvPreviewWrapper" class="w-full aspect-video relative flex items-center justify-center overflow-hidden rounded-xl bg-slate-900">
+              <!-- Dinamik olarak ölçeklenen slayt buraya enjekte edilecek -->
+              <div id="tvSlideStage" class="w-full h-full flex items-center justify-center"></div>
+            </div>
+          </div>
+
+          <!-- Arka Planda HD 1920x1080 Render Container (Ekran Çözünürlüğü İçin) -->
+          <div style="position: absolute; left: -99999px; top: -99999px; width: 1920px; height: 1080px; overflow: hidden;" id="tvOffscreenRender">
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. E-POSTA BİLGİLENDİRME -->
+      <div id="emailSettings" class="admin-content hidden">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
           <div>
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
@@ -653,6 +746,7 @@
       }
       if (adminTabId === 'fixtures') showFixtures();
       if (adminTabId === 'adminPlayoffs') renderAdminPlayoffs();
+      if (adminTabId === 'broadcast') initTvStudio();
     }
 
     const ADMIN_PASS = '26575982824.bati';
@@ -2318,156 +2412,4 @@
               <div>
                 <span class="bg-white/20 text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">Büyük Sahne</span>
                 <h3 class="text-3xl font-black mt-2">🌟 Oditoryum Matematik Ligi Finalistleri</h3>
-                <p class="text-amber-100 text-sm mt-1 max-w-xl">Zorlu 2 maçlık eleme serilerini geçerek büyük sahnede yarışmaya hak kazanan şampiyon adayları!</p>
-              </div>
-              <div class="text-6xl drop-shadow-lg">🏆</div>
-            </div>
-
-            ${finalists.length === 0 ? `
-              <div class="p-16 text-center text-slate-400 bg-slate-50 rounded-3xl border border-slate-200">
-                Finalistler belirlenmek üzere! Eleme turları devam ediyor.
-              </div>
-            ` : `
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                ${finalists.map((f, i) => `
-                  <div class="bg-white p-6 rounded-3xl border-2 border-amber-300 shadow-lg hover:shadow-xl transition-all flex items-center gap-4 relative overflow-hidden group">
-                    <div class="w-14 h-14 bg-gradient-to-br from-amber-400 to-amber-500 text-white font-black text-2xl rounded-2xl flex items-center justify-center shadow-md transform group-hover:scale-105 transition-transform">
-                      ${i + 1}
-                    </div>
-                    <div>
-                      <h4 class="font-black text-lg text-slate-900">${f.name}</h4>
-                      <p class="text-xs font-extrabold text-indigo-600">Grup ${f.group} ${f.rank}.si • Grup Neti: ${formatNet(f.totalNet)}</p>
-                      <span class="inline-block mt-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">Oditoryum Finalisti</span>
-                    </div>
-                    <div class="absolute -right-4 -bottom-4 text-7xl opacity-5">🏆</div>
-                  </div>
-                `).join('')}
-              </div>
-            `}
-          </div>`;
-      }
-    }
-
-    // ---------- INIT ----------
-    document.addEventListener('DOMContentLoaded', ()=>{
-      switchGrade(currentGrade);
-      checkGradeModal();
-      if (document.getElementById('setupStudentList')) calculateSetup();
-    });
-    
-
-
-    function getDefaultEmailMessage(grade) {
-      const g = grade || currentGrade || '6';
-      return `Merhaba arkadaşlar,\n${g}. Sınıflar Matematik Ligi sistemindeki veriler güncellenmiştir. \nPortal üzerinden inceleyebilirsiniz.\nİyi çalışmalar.`;
-    }
-
-    window.resetEmailTemplateToDefault = function() {
-      const defaultText = getDefaultEmailMessage(currentGrade);
-      const el = document.getElementById('emailMessageText');
-      if (el) el.value = defaultText;
-    };
-
-    window.saveNotificationSettings = function() {
-      const emails = document.getElementById('teacherEmails').value.trim();
-      const msg = document.getElementById('emailMessageText').value.trim();
-      leagueData.teacherEmails = emails;
-      leagueData.customEmailMessage = msg;
-      saveData();
-      alert(`✅ ${currentGrade}. Sınıflar için e-posta listesi ve mesaj metni başarıyla kaydedildi!`);
-    };
-
-    window.toggleEmailJSDetails = function() {
-      const sec = document.getElementById('emailJsConfigSection');
-      if (sec) sec.classList.toggle('hidden');
-    };
-
-    function loadEmailJsConfig() {
-      try {
-        const cfg = JSON.parse(localStorage.getItem('mathLeagueEmailJsConfig') || '{}');
-        const pubKey = cfg.publicKey || 'YS9oy9qMdJ1a1r9ZS';
-        const srvId = cfg.serviceId || 'service_joww66c';
-        const tplId = cfg.templateId || 'template_dsjts1k';
-
-        if (document.getElementById('emailjsPublicKey')) document.getElementById('emailjsPublicKey').value = pubKey;
-        if (document.getElementById('emailjsServiceId')) document.getElementById('emailjsServiceId').value = srvId;
-        if (document.getElementById('emailjsTemplateId')) document.getElementById('emailjsTemplateId').value = tplId;
-        
-        const badge = document.getElementById('emailJsStatusBadge');
-        if (badge) {
-          if (pubKey && srvId && tplId) {
-            badge.innerText = '⚡ EmailJS Aktif (Arka Planda Tam Otomatik)';
-            badge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200';
-          } else {
-            badge.innerText = 'Uygulama Modu (Varsayılan)';
-            badge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200';
-          }
-        }
-      } catch(e){}
-    }
-
-    window.saveEmailJsConfig = function() {
-      const publicKey = document.getElementById('emailjsPublicKey').value.trim();
-      const serviceId = document.getElementById('emailjsServiceId').value.trim();
-      const templateId = document.getElementById('emailjsTemplateId').value.trim();
-      
-      const cfg = { publicKey, serviceId, templateId };
-      localStorage.setItem('mathLeagueEmailJsConfig', JSON.stringify(cfg));
-      loadEmailJsConfig();
-      alert('✅ EmailJS ayarları kaydedildi!');
-    };
-
-    window.sendNotificationEmail = async function() {
-      const emailsInput = document.getElementById('teacherEmails').value.trim();
-      const msgInput = document.getElementById('emailMessageText').value.trim();
-      if (!emailsInput) {
-        alert("⚠️ Lütfen önce e-posta adreslerini yazıp kaydedin.");
-        return;
-      }
-      
-      const messageBody = msgInput || getDefaultEmailMessage(currentGrade);
-      const subjectText = `Matematik Ligi (${currentGrade}. Sınıflar) - Sistem Güncellemesi`;
-
-      let cfg = {};
-      try { cfg = JSON.parse(localStorage.getItem('mathLeagueEmailJsConfig') || '{}'); } catch(e){}
-      const publicKey = cfg.publicKey || 'YS9oy9qMdJ1a1r9ZS';
-      const serviceId = cfg.serviceId || 'service_joww66c';
-      const templateId = cfg.templateId || 'template_dsjts1k';
-
-      const hasEmailJs = publicKey && serviceId && templateId && typeof emailjs !== 'undefined';
-
-      if (hasEmailJs) {
-        const btn = document.getElementById('btnSendNotification');
-        const origHtml = btn ? btn.innerHTML : '';
-        if (btn) {
-          btn.disabled = true;
-          btn.innerHTML = '<span>⏳ E-Posta Gönderiliyor...</span>';
-        }
-        try {
-          emailjs.init(publicKey);
-          const cleanEmailList = emailsInput.split(/[\n,;]+/).map(e => e.trim()).filter(e => e).join(', ');
-          await emailjs.send(serviceId, templateId, {
-            to_email: cleanEmailList,
-            subject: subjectText,
-            message: messageBody,
-            grade: currentGrade
-          });
-          alert(`✅ E-posta başarıyla gönderildi! (${currentGrade}. Sınıf öğretmenlerine arka planda otomatik iletildi)`);
-        } catch(err) {
-          console.error("EmailJS Hatası:", err);
-          alert("⚠️ EmailJS gönderiminde hata oluştu (" + (err.text || err.message || "Bilinmeyen hata") + "). Mail uygulamanız açılıyor...");
-          window.location.href = `mailto:?bcc=${encodeURIComponent(emailsInput)}&subject=${encodeURIComponent(subjectText)}&body=${encodeURIComponent(messageBody)}`;
-        } finally {
-          if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = origHtml;
-          }
-        }
-      } else {
-        window.location.href = `mailto:?bcc=${encodeURIComponent(emailsInput)}&subject=${encodeURIComponent(subjectText)}&body=${encodeURIComponent(messageBody)}`;
-      }
-    };
-  </script>
-  <a id="downloadBackup" style="display:none"></a>
-</body>
-</html>
+                <p class="text-amber-100 text-sm mt-1 max-w-xl">Zorlu 2 maçlık eleme serilerini geçerek büyük sahnede yarışmaya hak kaz
