@@ -2751,8 +2751,12 @@
     function wrapTvSlideHtml(mainTitle, subTitle, slideNum, totalSlides, contentHtml) {
       return `
         <div style="width:1920px; height:1080px; box-sizing:border-box; background:linear-gradient(135deg, #090d16 0%, #171c2e 50%, #0c101c 100%); color:#ffffff; font-family:'Inter', sans-serif; padding:44px 56px; display:flex; flex-direction:column; justify-content:space-between; position:relative; overflow:hidden;">
-          <div style="position:absolute; top:-100px; left:-100px; width:500px; height:500px; background:radial-gradient(circle, rgba(79,70,229,0.15) 0%, rgba(0,0,0,0) 70%); pointer-events:none;"></div>
-          <div style="position:absolute; bottom:-100px; right:-100px; width:500px; height:500px; background:radial-gradient(circle, rgba(245,158,11,0.1) 0%, rgba(0,0,0,0) 70%); pointer-events:none;"></div>
+          <!-- Özel Arka Plan Görseli (%60 Opaklık) -->
+          <div style="position:absolute; inset:0; background-image:url('https://i.imgur.com/gVFX0lf.jpeg'); background-size:cover; background-position:center; opacity:0.6; pointer-events:none; z-index:1;"></div>
+
+          <!-- Arka Plan Işık Efektleri -->
+          <div style="position:absolute; top:-100px; left:-100px; width:500px; height:500px; background:radial-gradient(circle, rgba(79,70,229,0.15) 0%, rgba(0,0,0,0) 70%); pointer-events:none; z-index:2;"></div>
+          <div style="position:absolute; bottom:-100px; right:-100px; width:500px; height:500px; background:radial-gradient(circle, rgba(245,158,11,0.1) 0%, rgba(0,0,0,0) 70%); pointer-events:none; z-index:2;"></div>
 
           <!-- Üst Başlık Bandı -->
           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid rgba(255,255,255,0.1); padding-bottom:18px; margin-bottom:24px; position:relative; z-index:10;">
@@ -3083,17 +3087,4 @@
         link.href = URL.createObjectURL(zipBlob);
         link.download = `Matematik_Ligi_${currentGrade}Sinif_TV_Gorselleri_${cat}_${dateFormatted}.zip`;
         link.click();
-      } catch(err) {
-        console.error("ZIP İndirme Hatası:", err);
-        alert("ZIP paketi hazırlanırken hata oluştu.");
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = origHtml;
-        }
-      }
-    };
-  </script>
-  <a id="downloadBackup" style="display:none"></a>
-</body>
-</html>
+  
