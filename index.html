@@ -3087,4 +3087,17 @@
         link.href = URL.createObjectURL(zipBlob);
         link.download = `Matematik_Ligi_${currentGrade}Sinif_TV_Gorselleri_${cat}_${dateFormatted}.zip`;
         link.click();
-  
+      } catch(err) {
+        console.error("ZIP İndirme Hatası:", err);
+        alert("ZIP paketi hazırlanırken hata oluştu.");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origHtml;
+        }
+      }
+    };
+  </script>
+  <a id="downloadBackup" style="display:none"></a>
+</body>
+</html>
