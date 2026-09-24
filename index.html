@@ -345,8 +345,8 @@
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Görsel Türü</label>
               <select id="tvCategorySelect" onchange="onTvCategoryChange()" class="w-full bg-white border border-slate-300 text-slate-900 text-sm font-semibold rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="weeklyMatches">⚽ Haftalık Maç Fikstürü & Eşleşmeleri</option>
                 <option value="standings">📊 Lig Puan Durumu Tabloları</option>
-                <option value="weeklyMatches">⚽ Haftalık Maç Sonuçları</option>
                 <option value="playoffs">🏆 Eleme Turları Eşleşmeleri</option>
               </select>
             </div>
@@ -1092,8 +1092,83 @@
 
 
 
-    function getSetupStudents() { return document.getElementById('setupStudentList').value.split(/\r?\n/).map(s => normName(s)).filter(Boolean); }
-    function getSetupBots() { return document.getElementById('setupBotList').value.split(',').map(s => normName(s)).filter(Boolean); }
+    function parseSetupStudents() {
+      const rawText = document.getElementById('setupStudentList')?.value || '';
+      const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      
+      const parsed = [];
+      let scoreCount = 0;
+
+      lines.forEach((line, originalIndex) => {
+        let cleanLine = line.replace(/\u00A0/g, ' ').trim();
+        
+        // 1. Baştaki sıra numaralarını temizle (Örn: "1- ", "1. ", "1) ", "01- ")
+        cleanLine = cleanLine.replace(/^\d+[\.\-\)\s\t]+/, '').trim();
+        
+        let score = null;
+        let name = cleanLine;
+
+        // 2. Yüzde veya Puan formatlarını tespit et (Örn: "%40.60", "40.60%", "% 40,60", "40,60")
+        const matchEndScore = cleanLine.match(/^(.*?)(?:[\s\t]+|[\s\t]*%[\s\t]*)%?\s*(-?\d+(?:[,\.]\d+)?)\s*%?$/);
+        const matchStartScore = cleanLine.match(/^%?\s*(-?\d+(?:[,\.]\d+)?)\s*%?[\s\t]+(.*?)$/);
+        const matchAnyPercent = cleanLine.match(/%\s*(-?\d+(?:[,\.]\d+)?)/);
+
+        if (matchEndScore && matchEndScore[1].trim() && matchEndScore[2] !== undefined) {
+          name = matchEndScore[1].trim();
+          const val = parseFloat(matchEndScore[2].replace(',', '.'));
+          if (!isNaN(val)) {
+            score = val;
+            scoreCount++;
+          }
+        } else if (matchStartScore && matchStartScore[2].trim() && matchStartScore[1] !== undefined) {
+          name = matchStartScore[2].trim();
+          const val = parseFloat(matchStartScore[1].replace(',', '.'));
+          if (!isNaN(val)) {
+            score = val;
+            scoreCount++;
+          }
+        } else if (matchAnyPercent) {
+          const val = parseFloat(matchAnyPercent[1].replace(',', '.'));
+          if (!isNaN(val)) {
+            score = val;
+            scoreCount++;
+          }
+          name = cleanLine.replace(/%\s*-?\d+(?:[,\.]\d+)?\s*%?/, '').trim();
+        }
+
+        // İsmi temizle (sayı ve yüzde işaretlerinden arındırılmış temiz öğrenci adı)
+        name = normName(name.replace(/[%]/g, '').trim());
+        if (name) {
+          parsed.push({
+            name: name,
+            score: score,
+            originalIndex: originalIndex
+          });
+        }
+      });
+
+      // Eğer başarı puanları/yüzdeleri girilmişse, büyükten küçüğe (1. en başarılı olacak şekilde) otomatik sırala
+      if (scoreCount > 0) {
+        parsed.sort((a, b) => {
+          if (a.score !== null && b.score !== null) {
+            return b.score - a.score;
+          }
+          if (a.score !== null) return -1;
+          if (b.score !== null) return 1;
+          return a.originalIndex - b.originalIndex;
+        });
+      }
+
+      return parsed.map(p => p.name);
+    }
+
+    function getSetupStudents() { 
+      return parseSetupStudents(); 
+    }
+    
+    function getSetupBots() { 
+      return (document.getElementById('setupBotList')?.value || '').split(',').map(s => normName(s)).filter(Boolean); 
+    }
 
     function calculateSetup() {
       const students = getSetupStudents(); const bots = getSetupBots();
@@ -1181,7 +1256,7 @@
       const selS = document.getElementById('standingsGroupSelect');
       if (selS && selS.options.length > 1){ selS.selectedIndex = 1; showStandings(); }
       
-      setTimeout(() => alert("🎉 Gruplar başarıyla oluşturuldu ve yılan sistemiyle adil bir şekilde dağıtıldı! Fikstürler çekildi."), 100);
+      setTimeout(() => alert("🎉 Gruplar başarıyla oluşturuldu ve başarı puanlarına göre yılan sistemiyle adil bir şekilde dağıtıldı!"), 100);
     }
 
     // ---------- AUTO UPLOAD ----------
@@ -2656,23 +2731,29 @@
         const week = document.getElementById('tvWeekSelect') ? parseInt(document.getElementById('tvWeekSelect').value) || 1 : 1;
         const allMatches = [];
         Object.keys(leagueData.fixtures || {}).forEach(g => {
-          (leagueData.fixtures[g] || []).forEach(f => {
-            if (f.week === week) {
-              const res = (leagueData.results && leagueData.results[f.id]) || { homeScore: '', awayScore: '' };
-              allMatches.push({ ...f, result: res, group: g });
+          (leagueData.fixtures[g] || []).forEach(weekObj => {
+            if (weekObj.week === week) {
+              (weekObj.matches || []).forEach(m => {
+                if (m.home === 'BAY' || m.away === 'BAY') return;
+                const res = (leagueData.results && leagueData.results[m.id]) || { homeScore: '', awayScore: '' };
+                allMatches.push({ ...m, result: res, group: g });
+              });
             }
           });
         });
 
+        const anyPlayed = allMatches.some(m => m.result.homeScore !== '' && m.result.awayScore !== '' && m.result.homeScore != null && m.result.awayScore != null);
+        const subTitleText = anyPlayed ? `${week}. HAFTA MAÇ SONUÇLARI` : `${week}. HAFTA MAÇ FİKSTÜRÜ`;
+
         if (!allMatches.length) {
-          currentTvSlides.push(createTvEmptySlide(baseMainTitle, `${week}. HAFTA MAÇ SONUÇLARI`, `${week}. Hafta için henüz eşleşme bulunamadı.`));
+          currentTvSlides.push(createTvEmptySlide(baseMainTitle, subTitleText, `${week}. Hafta için henüz eşleşme bulunamadı.`));
         } else {
-          const matchesPerSlide = 6;
+          const matchesPerSlide = 10;
           const totalSlides = Math.ceil(allMatches.length / matchesPerSlide);
           for (let i = 0; i < allMatches.length; i += matchesPerSlide) {
             const slideMatches = allMatches.slice(i, i + matchesPerSlide);
             const slideNum = Math.floor(i / matchesPerSlide) + 1;
-            currentTvSlides.push(createTvMatchesSlide(baseMainTitle, `${week}. HAFTA MAÇ SONUÇLARI`, slideMatches, slideNum, totalSlides));
+            currentTvSlides.push(createTvMatchesSlide(baseMainTitle, subTitleText, slideMatches, slideNum, totalSlides));
           }
         }
       } else if (cat === 'playoffs') {
@@ -2866,26 +2947,30 @@
         const isP2Winner = isPlayed && (parseFloat(s2) > parseFloat(s1));
 
         return `
-          <div style="background:rgba(15, 23, 42, 0.75); border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:18px 24px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 8px 16px rgba(0,0,0,0.3);">
-            <div style="flex:1; text-align:left; overflow:hidden;">
-              <div style="font-size:13px; font-weight:900; color:#fbbf24; letter-spacing:1px; margin-bottom:4px; text-transform:uppercase;">GRUP ${m.group}</div>
-              <div style="font-size:20px; font-weight:900; color:${isP1Winner ? '#34d399' : '#ffffff'}; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">
+          <div style="background:rgba(15, 23, 42, 0.75); border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:18px 24px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 8px 16px rgba(0,0,0,0.3); min-height:110px;">
+            <div style="flex:1; text-align:left;">
+              <div style="font-size:14px; font-weight:900; color:#fbbf24; letter-spacing:1px; margin-bottom:6px; text-transform:uppercase;">GRUP ${m.group}</div>
+              <div style="font-size:22px; font-weight:900; color:${isP1Winner ? '#34d399' : '#ffffff'}; line-height:1.2; padding-bottom:2px;">
                 ${m.home} ${isP1Winner ? '🏆' : ''}
               </div>
             </div>
 
-            <div style="margin:0 20px; text-align:center;">
-              <div style="background:linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.9)); border:1px solid rgba(255,255,255,0.2); border-radius:14px; padding:8px 20px; display:flex; align-items:center; gap:12px;">
-                <span style="font-size:26px; font-weight:900; color:${isP1Winner ? '#34d399' : '#ffffff'}; font-family:monospace;">${p1Score}</span>
-                <span style="font-size:16px; font-weight:800; color:#fbbf24;">:</span>
-                <span style="font-size:26px; font-weight:900; color:${isP2Winner ? '#34d399' : '#ffffff'}; font-family:monospace;">${p2Score}</span>
+            <div style="margin:0 20px; text-align:center; transform: translateY(-2px);">
+              <div style="background:linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.9)); border:1px solid rgba(255,255,255,0.2); border-radius:14px; padding:8px 20px 12px 20px; display:flex; align-items:center; gap:16px; min-width:140px; justify-content:center;">
+                ${isPlayed ? `
+                  <span style="font-size:28px; font-weight:900; color:${isP1Winner ? '#34d399' : '#ffffff'}; font-family:monospace; line-height:1; padding-top:4px;">${p1Score}</span>
+                  <span style="font-size:20px; font-weight:800; color:#fbbf24; line-height:1; padding-top:4px;">:</span>
+                  <span style="font-size:28px; font-weight:900; color:${isP2Winner ? '#34d399' : '#ffffff'}; font-family:monospace; line-height:1; padding-top:4px;">${p2Score}</span>
+                ` : `
+                  <span style="font-size:24px; font-weight:900; color:#818cf8; letter-spacing:4px; line-height:1; padding-top:4px;">VS</span>
+                `}
               </div>
-              <div style="font-size:10px; font-weight:700; color:#94a3b8; margin-top:4px;">${isPlayed ? 'MAÇ TAMAMLANDI' : 'BEKLENİYOR'}</div>
+              ${isPlayed ? `<div style="font-size:12px; font-weight:800; color:#94a3b8; margin-top:8px;">MAÇ TAMAMLANDI</div>` : ''}
             </div>
 
-            <div style="flex:1; text-align:right; overflow:hidden;">
-              <div style="font-size:13px; font-weight:900; color:#fbbf24; letter-spacing:1px; margin-bottom:4px; text-transform:uppercase;">GRUP ${m.group}</div>
-              <div style="font-size:20px; font-weight:900; color:${isP2Winner ? '#34d399' : '#ffffff'}; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">
+            <div style="flex:1; text-align:right;">
+              <div style="font-size:14px; font-weight:900; color:#fbbf24; letter-spacing:1px; margin-bottom:6px; text-transform:uppercase;">GRUP ${m.group}</div>
+              <div style="font-size:22px; font-weight:900; color:${isP2Winner ? '#34d399' : '#ffffff'}; line-height:1.2; padding-bottom:2px;">
                 ${isP2Winner ? '🏆 ' : ''}${m.away}
               </div>
             </div>
