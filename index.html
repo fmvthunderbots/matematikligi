@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
@@ -620,7 +620,9 @@
         updateCloudStatus(true);
         const data = snapshot.val();
         if (data && data.groups && Object.keys(data.groups).length > 0) {
-          leagueData = { matchIndex: {}, bots: [], ...data };
+          leagueData = { groups: {}, fixtures: {}, results: {}, matchIndex: {}, bots: [], ...data };
+          if (!leagueData.fixtures) leagueData.fixtures = {};
+          if (!leagueData.results) leagueData.results = {};
           if (!leagueData.bots) leagueData.bots = [];
           Object.keys(leagueData.groups || {}).forEach(g => {
             ensureFixturesForGroup(g);
@@ -683,7 +685,10 @@
         try {
           const obj = JSON.parse(reader.result);
           if (obj && obj.groups) {
-            leagueData = { matchIndex:{}, bots:[], ...obj };
+            leagueData = { groups: {}, fixtures: {}, results: {}, matchIndex: {}, bots: [], ...obj };
+            if (!leagueData.fixtures) leagueData.fixtures = {};
+            if (!leagueData.results) leagueData.results = {};
+            if (!leagueData.bots) leagueData.bots = [];
             Object.keys(leagueData.fixtures||{}).forEach(g => buildMatchIndex(g));
             saveData(); populateGroupSelects();
             showFixtures(); showStandings();
@@ -716,7 +721,9 @@
     function loadData(){
       leagueData = { groups: {}, fixtures: {}, results: {}, matchIndex: {}, bots: [] };
       const saved = localStorage.getItem(getStorageKey());
-      if (saved) { try { leagueData = { matchIndex:{}, bots:[], ...JSON.parse(saved) }; } catch(e){} }
+      if (saved) { try { leagueData = { groups: {}, fixtures: {}, results: {}, matchIndex: {}, bots: [], ...JSON.parse(saved) }; } catch(e){} }
+      if (!leagueData.fixtures) leagueData.fixtures = {};
+      if (!leagueData.results) leagueData.results = {};
       if (!leagueData.bots) leagueData.bots = [];
       let op = 59;
       document.body.style.backgroundImage = `linear-gradient(rgba(248, 250, 252, ${op/100}), rgba(248, 250, 252, ${op/100})), url('https://i.imgur.com/y65pM0O.png')`;
@@ -830,7 +837,10 @@
       }
       return fixtures;
     }
-    function ensureFixturesForGroup(g){ if (!leagueData.fixtures[g] || !leagueData.fixtures[g].length){ leagueData.fixtures[g] = generateFixtures(g); } }
+    function ensureFixturesForGroup(g){ 
+      if (!leagueData.fixtures) leagueData.fixtures = {};
+      if (!leagueData.fixtures[g] || !leagueData.fixtures[g].length){ leagueData.fixtures[g] = generateFixtures(g); } 
+    }
     function buildMatchIndex(g){
       const fx = leagueData.fixtures[g]||[];
       for (const w of fx){ for (const m of w.matches){ leagueData.matchIndex[m.id] = { group:g, week:w.week, home:m.home, away:m.away }; } }
