@@ -965,7 +965,11 @@
         H.goalDifference = Math.round((H.correct - H.wrong) * 10) / 10; 
         A.goalDifference = Math.round((A.correct - A.wrong) * 10) / 10;
       });
-      S.sort((a,b)=>(b.points-a.points)||(b.correct-a.correct)||(b.goalDifference-a.goalDifference));
+      S.sort((a,b)=>{
+        const diff = (b.points - a.points) || (b.correct - a.correct) || (b.goalDifference - a.goalDifference);
+        if (diff !== 0) return diff;
+        return a.name.localeCompare(b.name, 'tr-TR');
+      });
       return S;
     }
 
