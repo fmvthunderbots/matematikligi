@@ -181,13 +181,25 @@
                 <option value="1">1. Hafta Maçları</option><option value="2">2. Hafta Maçları</option><option value="3">3. Hafta Maçları</option><option value="4">4. Hafta Maçları</option><option value="5">5. Hafta Maçları</option><option value="6">6. Hafta Maçları</option><option value="7">7. Hafta Maçları</option><option value="8">8. Hafta Maçları</option><option value="9">9. Hafta Maçları</option><option value="10">10. Hafta Maçları</option>
               </select>
             </div>
-            <div class="w-full md:w-2/3">
-              <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">Sonuç Dosyasını Yükleyin</label>
-              <label class="flex items-center justify-center gap-2 w-full bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3.5 rounded-xl cursor-pointer font-bold text-lg transition-all shadow-md">
-                <span>📁 Dosya Yükle</span>
-                <input type="file" id="autoUploadInput" accept=".pdf, .xlsx, .xls, .csv" class="hidden" onchange="handleAutoUpload(event)" />
-              </label>
+            <div class="w-full md:w-2/3 flex flex-col sm:flex-row gap-3 items-end">
+              <div class="w-full sm:w-1/2">
+                <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">Sonuç Dosyasını Yükleyin</label>
+                <label class="flex items-center justify-center gap-2 w-full bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-3.5 rounded-xl cursor-pointer font-bold text-base transition-all shadow-md">
+                  <span>📁 Dosya Yükle (Excel/CSV/PDF)</span>
+                  <input type="file" id="autoUploadInput" accept=".pdf, .xlsx, .xls, .csv, .txt" class="hidden" onchange="handleAutoUpload(event)" />
+                </label>
+              </div>
+              <div class="w-full sm:w-1/2">
+                <button type="button" onclick="document.getElementById('bulkPasteBox').classList.toggle('hidden')" class="flex items-center justify-center gap-2 w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3.5 rounded-xl cursor-pointer font-bold text-base transition-all shadow-md">
+                  <span>📋 Metin / Liste Yapıştır (Tüm Gruplar)</span>
+                </button>
+              </div>
             </div>
+          </div>
+          <div id="bulkPasteBox" class="hidden mb-6 bg-indigo-50/70 border border-indigo-200 rounded-2xl p-5 shadow-sm">
+            <label class="block text-sm font-bold text-indigo-950 mb-2">📋 Tüm Sınıfın Sonuç Listesini Yapıştırın (Örn: Ad Soyad, Net)</label>
+            <textarea id="bulkPasteInput" rows="6" class="w-full bg-white border border-indigo-300 text-slate-800 rounded-xl p-3.5 font-mono text-sm focus:ring-2 focus:ring-indigo-500 outline-none mb-3" placeholder="Öğrenci Adı Soyadı,Matematik Neti&#10;İnan Aldemir,15&#10;Ali Oğuz,15&#10;Çınar Berkay Kılınç,13.67..."></textarea>
+            <button type="button" onclick="handleBulkTextUpload()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-6 py-2.5 rounded-xl shadow-md transition-all cursor-pointer">🔍 Listeyi Analiz Et ve Önizle</button>
           </div>
           <div id="autoPreviewArea"></div>
         </div>
@@ -366,6 +378,7 @@
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Görsel Türü</label>
               <select id="tvCategorySelect" onchange="onTvCategoryChange()" class="w-full bg-white border border-slate-300 text-slate-900 text-sm font-semibold rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="weeklyMatches">⚽ Haftalık Maç Fikstürü & Eşleşmeleri</option>
+                <option value="weeklyTop10">🌟 Haftanın Enleri (En İyi 10)</option>
                 <option value="standings">📊 Lig Puan Durumu Tabloları</option>
                 <option value="playoffs">🏆 Eleme Turları Eşleşmeleri</option>
               </select>
@@ -1487,11 +1500,24 @@
 
     async function extractFromExcel(file) {
       return new Promise((resolve, reject) => {
+        const isCsv = file.name.toLowerCase().endsWith('.csv') || file.name.toLowerCase().endsWith('.txt');
         const reader = new FileReader();
         reader.onload = (e) => {
           try {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
+            if (isCsv) {
+              const textRes = parseBulkTextScores(String(e.target.result || ''));
+              if (Object.keys(textRes).length > 0) {
+                resolve(textRes);
+                return;
+              }
+            }
+            let workbook;
+            if (isCsv) {
+              workbook = XLSX.read(e.target.result, { type: 'string', raw: true });
+            } else {
+              const data = new Uint8Array(e.target.result);
+              workbook = XLSX.read(data, { type: 'array', raw: true });
+            }
             const results = {};
             
             const allPlayers = [];
@@ -1518,7 +1544,7 @@
                   if (nameCol === -1 && (cellStr.includes('ÖĞRE') || cellStr.includes('AD SOYAD') || cellStr.includes('ADI SOYADI') || cellStr.includes('İSİM') || cellStr.includes('ISIM'))) {
                     nameCol = c;
                   }
-                  if (!isPercent && netCol === -1 && (cellStr.includes('05.N') || cellStr.includes('MAT 05') || (cellStr.includes('MAT') && cellStr.endsWith('.N')) || cellStr === 'N' || cellStr === 'NET' || cellStr === 'MAT NET')) {
+                  if (!isPercent && netCol === -1 && (cellStr.includes('05.N') || cellStr.includes('MAT 05') || (cellStr.includes('MAT') && cellStr.endsWith('.N')) || cellStr === 'N' || cellStr === 'NET' || cellStr === 'MAT NET' || cellStr.includes('NETİ') || cellStr.includes('NETI') || cellStr.includes('MATEMATİK NET') || cellStr.includes('MATEMATIK NET') || cellStr.includes('PUAN'))) {
                     netCol = c;
                   }
                   if (!isPercent && dCol === -1 && (cellStr.includes('01.D') || cellStr.includes('MAT 01') || (cellStr.includes('MAT') && cellStr.endsWith('.D')) || cellStr === 'D')) {
@@ -1539,15 +1565,15 @@
                 
                 if (nameCol !== -1 && row[nameCol]) {
                   const cellName = normName(String(row[nameCol]));
-                  foundPlayer = allPlayers.find(p => p && (cellName === normName(p) || cellName.includes(normName(p)) || normName(p).includes(cellName)));
+                  foundPlayer = allPlayers.find(p => p && p !== 'BAY' && (cellName === normName(p) || cellName.includes(normName(p)) || normName(p).includes(cellName))) || cellName;
                 }
                 
                 if (!foundPlayer) {
                   for (let c = 0; c < row.length; c++) {
                     if (c === netCol || c === dCol || c === yCol) continue;
                     const cellStr = normName(String(row[c]));
-                    if (cellStr.length >= 3) {
-                      foundPlayer = allPlayers.find(p => p && p !== 'BAY' && (cellStr === normName(p) || cellStr.includes(normName(p)) || normName(p).includes(cellStr)));
+                    if (cellStr.length >= 3 && !/^-?\d+(?:[.,]\d+)?$/.test(cellStr)) {
+                      foundPlayer = allPlayers.find(p => p && p !== 'BAY' && (cellStr === normName(p) || cellStr.includes(normName(p)) || normName(p).includes(cellStr))) || cellStr;
                       if (foundPlayer) break;
                     }
                   }
@@ -1570,6 +1596,21 @@
                       netScore = Math.round((d - (y / 3)) * 10) / 10;
                     }
                   }
+
+                  // Eğer hala Net bulunamadıysa ve 2 sütunlu basit bir tabloysa (İsim, Net) diğer sütundaki sayıyı al
+                  if (netScore === null && netCol === -1 && dCol === -1) {
+                    for (let c = 0; c < row.length; c++) {
+                      const rawCell = String(row[c]).trim();
+                      if (!rawCell) continue;
+                      if (/^-?\d+(?:[.,]\d+)?$/.test(rawCell)) {
+                        const val = parseFloat(rawCell.replace(',', '.'));
+                        if (!isNaN(val) && val >= -5 && val <= 20) {
+                          netScore = Math.round(val * 10) / 10;
+                          break;
+                        }
+                      }
+                    }
+                  }
                   
                   if (netScore !== null) {
                     results[foundPlayer] = Math.min(15, Math.max(-5, netScore));
@@ -1582,8 +1623,46 @@
           } catch (err) { reject(err); }
         };
         reader.onerror = reject;
-        reader.readAsArrayBuffer(file);
+        if (isCsv) reader.readAsText(file, 'UTF-8');
+        else reader.readAsArrayBuffer(file);
       });
+    }
+
+    function parseBulkTextScores(rawText) {
+      const results = {};
+      const allPlayers = [];
+      Object.values(leagueData.groups || {}).forEach(arr => allPlayers.push(...arr));
+      
+      rawText.split(/\r?\n/).forEach(line => {
+        const clean = line.trim();
+        if (!clean) return;
+        const m = clean.match(/^(.*?)(?:[,;\t]+|\s{2,})\s*(-?\d+(?:[.,]\d+)?)\s*$/);
+        if (m) {
+          const rawName = normName(m[1]);
+          const val = parseFloat(m[2].replace(',', '.'));
+          if (rawName && !isNaN(val) && val >= -5 && val <= 20) {
+            const netScore = Math.round(val * 10) / 10;
+            const foundPlayer = allPlayers.find(p => p && p !== 'BAY' && (rawName === normName(p) || rawName.includes(normName(p)) || normName(p).includes(rawName)));
+            if (foundPlayer) {
+              results[foundPlayer] = Math.min(15, Math.max(-5, netScore));
+            } else {
+              results[rawName] = Math.min(15, Math.max(-5, netScore));
+            }
+          }
+        }
+      });
+      if (Object.keys(results).length === 0) {
+        return parseTextForScores(rawText);
+      }
+      return results;
+    }
+
+    function handleBulkTextUpload() {
+      const rawText = document.getElementById('bulkPasteInput')?.value || '';
+      if (!rawText.trim()) { alert('Lütfen önce listeyi yapıştırın!'); return; }
+      const week = parseInt(document.getElementById('autoUploadWeekSelect').value, 10);
+      const extractedScores = parseBulkTextScores(rawText);
+      renderAutoUploadPreview(extractedScores, week);
     }
 
     async function handleAutoUpload(event) {
@@ -1591,13 +1670,29 @@
       const week = parseInt(document.getElementById('autoUploadWeekSelect').value, 10);
       const previewArea = document.getElementById('autoPreviewArea');
       
-      const labelEl = event.target.parentElement; const originalText = labelEl.innerHTML;
-      labelEl.innerHTML = "⏳ İşleniyor..."; previewArea.innerHTML = "";
+      const labelEl = event.target.parentElement;
+      const spanEl = labelEl ? labelEl.querySelector('span') : null;
+      const originalSpanText = spanEl ? spanEl.innerText : '📁 Dosya Yükle (Excel/CSV/PDF)';
+      if (spanEl) spanEl.innerText = "⏳ İşleniyor...";
+      previewArea.innerHTML = "";
       
       try {
         let extractedScores = {};
         if (file.name.toLowerCase().endsWith('.pdf')) { extractedScores = await extractFromPDF(file); }
         else { extractedScores = await extractFromExcel(file); }
+        renderAutoUploadPreview(extractedScores, week);
+      } catch (error) {
+        console.error(error);
+        previewArea.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200">❌ <b>Hata Oluştu</b><br>${error.message}</div>`;
+      } finally {
+        if (spanEl) spanEl.innerText = originalSpanText;
+        event.target.value = '';
+      }
+    }
+
+    function renderAutoUploadPreview(extractedScores, week) {
+      const previewArea = document.getElementById('autoPreviewArea');
+      try {
         
         let updates = []; let foundCount = 0; let totalExpected = 0; let matchCards = "";
         
@@ -1612,10 +1707,20 @@
             if(m.home === 'BAY' || m.away === 'BAY') return;
             totalExpected += 2;
             
-            let hScore = extractedScores[m.home];
+            let hScore = extractedScores[m.home] ?? extractedScores[normName(m.home)];
+            if (hScore === undefined) {
+              const hNorm = normName(m.home);
+              const fk = Object.keys(extractedScores).find(k => k && (normName(k) === hNorm || normName(k).includes(hNorm) || hNorm.includes(normName(k))));
+              if (fk) hScore = extractedScores[fk];
+            }
             if (hScore === undefined && leagueData.bots.includes(normName(m.home))) hScore = 14;
             
-            let aScore = extractedScores[m.away];
+            let aScore = extractedScores[m.away] ?? extractedScores[normName(m.away)];
+            if (aScore === undefined) {
+              const aNorm = normName(m.away);
+              const fk = Object.keys(extractedScores).find(k => k && (normName(k) === aNorm || normName(k).includes(aNorm) || aNorm.includes(normName(k))));
+              if (fk) aScore = extractedScores[fk];
+            }
             if (aScore === undefined && leagueData.bots.includes(normName(m.away))) aScore = 14;
             
             if (hScore !== undefined) foundCount++;
@@ -1654,7 +1759,6 @@
         console.error(error);
         previewArea.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200">❌ <b>Hata Oluştu</b><br>${error.message}</div>`;
       }
-      labelEl.innerHTML = originalText; event.target.value = '';
     }
 
     window.latestAutoUploadUpdates = [];
@@ -1700,11 +1804,11 @@
       if (!raw || !g) { out.innerHTML = '<div class="text-red-500 font-bold">Lütfen grup seçin ve veri girin.</div>'; return; }
       
       const scores = {};
-      raw.split('\n').forEach(line => {
-        const p = line.trim().split(/[\t]+|,\s*|;\s*|\s{2,}/);
-        if (p.length >= 2){
-          const name = normName(p[0]); 
-          const score = parseNet(p[p.length-1]);
+      raw.split(/\r?\n/).forEach(line => {
+        const m = line.trim().match(/^(.*?)(?:[,;\t]+|\s{2,})\s*(-?\d+(?:[.,]\d+)?)\s*$/);
+        if (m) {
+          const name = normName(m[1]);
+          const score = parseNet(m[2]);
           if (name && score !== '') scores[name] = score;
         }
       });
@@ -2749,7 +2853,7 @@
       const weekContainer = document.getElementById('tvWeekSelectContainer');
       const playoffContainer = document.getElementById('tvPlayoffRoundSelectContainer');
       
-      if (cat === 'weeklyMatches') {
+      if (cat === 'weeklyMatches' || cat === 'weeklyTop10') {
         if (weekContainer) weekContainer.classList.remove('hidden');
         if (playoffContainer) playoffContainer.classList.add('hidden');
         populateTvWeeks();
@@ -2861,6 +2965,53 @@
             const slideNum = Math.floor(i / matchesPerSlide) + 1;
             currentTvSlides.push(createTvMatchesSlide(baseMainTitle, subTitleText, slideMatches, slideNum, totalSlides));
           }
+        }
+      } else if (cat === 'weeklyTop10') {
+        const week = document.getElementById('tvWeekSelect') ? parseInt(document.getElementById('tvWeekSelect').value) || 1 : 1;
+        const playerScores = [];
+        const seen = new Set();
+
+        Object.keys(leagueData.fixtures || {}).sort().forEach(g => {
+          (leagueData.fixtures[g] || []).forEach(weekObj => {
+            if (weekObj.week === week) {
+              (weekObj.matches || []).forEach(m => {
+                if (m.home === 'BAY' || m.away === 'BAY') return;
+                const res = (leagueData.results && leagueData.results[m.id]) || {};
+                const hs = parseNet(res.homeScore);
+                const as = parseNet(res.awayScore);
+
+                const isHomeBot = leagueData.bots && leagueData.bots.includes(normName(m.home));
+                const isAwayBot = leagueData.bots && leagueData.bots.includes(normName(m.away));
+
+                if (hs !== '' && !isHomeBot && !seen.has(normName(m.home))) {
+                  seen.add(normName(m.home));
+                  playerScores.push({ name: m.home, group: g, score: hs, opponent: m.away, won: (as !== '' && hs > as) });
+                }
+                if (as !== '' && !isAwayBot && !seen.has(normName(m.away))) {
+                  seen.add(normName(m.away));
+                  playerScores.push({ name: m.away, group: g, score: as, opponent: m.home, won: (hs !== '' && as > hs) });
+                }
+              });
+            }
+          });
+        });
+
+        // En yüksek netten en düşüğe sırala (Eşitlikte galibiyet alanlar ve alfabetik sıra)
+        playerScores.sort((a, b) => (b.score - a.score) || ((b.won ? 1 : 0) - (a.won ? 1 : 0)) || a.name.localeCompare(b.name, 'tr-TR'));
+
+        const subTitleText = `${week}. HAFTANIN EN İYİ 10 ÖĞRENCİSİ`;
+        if (!playerScores.length) {
+          currentTvSlides.push(createTvEmptySlide(baseMainTitle, subTitleText, `${week}. Hafta için henüz girilmiş maç sonucu bulunamadı.`));
+        } else {
+          const top10 = playerScores.slice(0, 10);
+          let currentRank = 1;
+          top10.forEach((p, idx) => {
+            if (idx > 0 && p.score < top10[idx - 1].score) {
+              currentRank = idx + 1;
+            }
+            p.displayRank = currentRank;
+          });
+          currentTvSlides.push(createTvTop10Slide(baseMainTitle, subTitleText, top10, week));
         }
       } else if (cat === 'playoffs') {
         const selVal = document.getElementById('tvPlayoffRoundSelect') ? document.getElementById('tvPlayoffRoundSelect').value : '0';
@@ -3171,6 +3322,76 @@
         <div style="width:100%; display:flex; flex-direction:column; justify-content:center;">
           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:24px;">
             ${cardsHtml}
+          </div>
+        </div>
+      `;
+
+      return wrapTvSlideHtml(mainTitle, subTitle, 1, 1, content);
+    }
+
+    function createTvTop10Slide(mainTitle, subTitle, top10, week) {
+      const leftCol = top10.slice(0, 5);
+      const rightCol = top10.slice(5, 10);
+
+      function renderCard(item, idx) {
+        const r = item.displayRank || (idx + 1);
+        let badgeBg = 'linear-gradient(135deg, #334155, #1e293b)';
+        let badgeColor = '#cbd5e1';
+        let borderStyle = '1px solid rgba(255,255,255,0.14)';
+        let cardBg = 'rgba(15, 23, 42, 0.78)';
+        let medalIcon = '';
+
+        if (r === 1) {
+          badgeBg = 'linear-gradient(135deg, #fbbf24, #d97706)';
+          badgeColor = '#090d16';
+          borderStyle = '2px solid rgba(251, 191, 36, 0.75)';
+          cardBg = 'linear-gradient(135deg, rgba(251, 191, 36, 0.16), rgba(15, 23, 42, 0.88))';
+          medalIcon = '👑 ';
+        } else if (r === 2) {
+          badgeBg = 'linear-gradient(135deg, #e2e8f0, #94a3b8)';
+          badgeColor = '#090d16';
+          borderStyle = '2px solid rgba(226, 232, 240, 0.6)';
+          cardBg = 'linear-gradient(135deg, rgba(226, 232, 240, 0.12), rgba(15, 23, 42, 0.85))';
+          medalIcon = '🥈 ';
+        } else if (r === 3) {
+          badgeBg = 'linear-gradient(135deg, #f59e0b, #b45309)';
+          badgeColor = '#ffffff';
+          borderStyle = '2px solid rgba(245, 158, 11, 0.55)';
+          cardBg = 'linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(15, 23, 42, 0.85))';
+          medalIcon = '🥉 ';
+        }
+
+        return `
+          <div style="background:${cardBg}; border:${borderStyle}; border-radius:20px; padding:16px 26px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 10px 24px rgba(0,0,0,0.35); min-height:112px;">
+            <div style="display:flex; align-items:center; gap:22px; flex:1;">
+              <div style="width:62px; height:62px; border-radius:18px; background:${badgeBg}; color:${badgeColor}; font-size:28px; font-weight:900; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.4); flex-shrink:0;">
+                ${r}
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:14px; font-weight:900; color:#fbbf24; letter-spacing:1.5px; margin-bottom:4px; text-transform:uppercase;">
+                  GRUP ${item.group} ${item.won ? '• HAFTANIN GALİBİ ✓' : ''}
+                </div>
+                <div style="font-size:25px; font-weight:900; color:#ffffff; line-height:1.25; padding-bottom:2px;">
+                  ${medalIcon}${item.name}
+                </div>
+              </div>
+            </div>
+
+            <div style="background:linear-gradient(135deg, rgba(30,41,59,0.95), rgba(15,23,42,0.95)); border:1px solid rgba(251,191,36,0.45); border-radius:16px; padding:10px 22px; text-align:center; min-width:130px; box-shadow:inset 0 2px 6px rgba(0,0,0,0.4);">
+              <div style="font-size:32px; font-weight:900; color:#34d399; font-family:monospace; line-height:1.1;">${formatNet(item.score)}</div>
+              <div style="font-size:11px; font-weight:900; color:#fbbf24; letter-spacing:1.5px; margin-top:2px;">MATEMATİK NETİ</div>
+            </div>
+          </div>
+        `;
+      }
+
+      const content = `
+        <div style="width:100%; display:grid; grid-template-columns:1fr 1fr; gap:28px; align-content:center;">
+          <div style="display:flex; flex-direction:column; gap:18px;">
+            ${leftCol.map((item, i) => renderCard(item, i)).join('')}
+          </div>
+          <div style="display:flex; flex-direction:column; gap:18px;">
+            ${rightCol.map((item, i) => renderCard(item, i + 5)).join('')}
           </div>
         </div>
       `;
