@@ -627,6 +627,14 @@
               </select>
             </div>
 
+            <div id="tvTop10CountContainer" class="hidden">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Gösterilecek Öğrenci Sayısı</label>
+              <div class="flex items-center gap-2">
+                <input type="number" id="tvTop10CountInput" min="1" max="30" value="10" oninput="onTvTop10CountManualChange()" class="w-24 bg-white border border-slate-300 text-slate-900 text-base font-black text-center rounded-xl p-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+                <button type="button" onclick="applyFairCutoffForTop10()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap shadow-sm" title="Aynı nette olan öğrencileri bölmemek için en uygun sayıyı otomatik seçer">⚖️ Eşit Nete Göre Öner</button>
+              </div>
+            </div>
+
             <div id="tvPlayoffRoundSelectContainer" class="hidden">
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Eleme Turu Seçimi</label>
               <select id="tvPlayoffRoundSelect" onchange="renderTvSlides()" class="w-full bg-white border border-slate-300 text-slate-900 text-sm font-semibold rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
@@ -1755,7 +1763,7 @@
           if (pctMatch) {
             const d = parseInt(pctMatch[1], 10);
             const y = parseInt(pctMatch[2], 10);
-            if (d >= 0 && d <= 15 && (d + y) <= 15) {
+            if (d >= 0 && d <= 20 && (d + y) <= 20) {
               const rawNet = d - (y / 3);
               foundNet = Math.round(rawNet * 10) / 10;
             }
@@ -1766,19 +1774,19 @@
             if (pctMatch2) {
               const d = parseInt(pctMatch2[1], 10);
               const y = parseInt(pctMatch2[2], 10);
-              if (d >= 0 && d <= 15 && (d + y) <= 15) {
+              if (d >= 0 && d <= 20 && (d + y) <= 20) {
                 const rawNet = d - (y / 3);
                 foundNet = Math.round(rawNet * 10) / 10;
               }
             }
           }
           
-          // 2. Net sütunundaki ondalıklı sayıyı doğrudan okuma (Örn: 7,000 veya 6,670 veya 14,000)
+          // 2. Net sütunundaki ondalıklı sayıyı doğrudan okuma (Örn: 7,000 veya 6,670 veya 18,670)
           if (foundNet === null) {
             const decMatch = slice.match(/(?<![%\d])(-?\d{1,2}[,\.]\d{1,3})/);
             if (decMatch) {
               const val = parseFloat(decMatch[1].replace(',', '.'));
-              if (!isNaN(val) && val >= -5 && val <= 15) {
+              if (!isNaN(val) && val >= -7 && val <= 20) {
                 foundNet = Math.round(val * 10) / 10;
               }
             }
@@ -1790,7 +1798,7 @@
             for (const pm of pairMatches) {
               const d = parseInt(pm[1], 10);
               const y = parseInt(pm[2], 10);
-              if (d >= 0 && d <= 15 && y >= 0 && y <= 15 && (d + y) <= 15) {
+              if (d >= 0 && d <= 20 && y >= 0 && y <= 20 && (d + y) <= 20) {
                 const rawNet = d - (y / 3);
                 foundNet = Math.round(rawNet * 10) / 10;
                 break;
@@ -1799,7 +1807,7 @@
           }
           
           if (foundNet !== null) {
-            results[player] = Math.min(15, Math.max(-5, foundNet));
+            results[player] = Math.min(20, Math.max(-7, foundNet));
           }
         }
       });
@@ -1918,7 +1926,7 @@
                   // Net sütunundan al
                   if (netCol !== -1 && row[netCol] !== undefined && row[netCol] !== '') {
                     const val = parseFloat(String(row[netCol]).replace(',', '.'));
-                    if (!isNaN(val) && val >= -5 && val <= 15) {
+                    if (!isNaN(val) && val >= -7 && val <= 20) {
                       netScore = Math.round(val * 10) / 10;
                     }
                   }
@@ -1927,7 +1935,7 @@
                   if (netScore === null && dCol !== -1 && row[dCol] !== undefined && row[dCol] !== '') {
                     const d = parseInt(row[dCol], 10) || 0;
                     const y = yCol !== -1 ? (parseInt(row[yCol], 10) || 0) : 0;
-                    if (d >= 0 && d <= 15) {
+                    if (d >= 0 && d <= 20) {
                       netScore = Math.round((d - (y / 3)) * 10) / 10;
                     }
                   }
@@ -1939,7 +1947,7 @@
                       if (!rawCell) continue;
                       if (/^-?\d+(?:[.,]\d+)?$/.test(rawCell)) {
                         const val = parseFloat(rawCell.replace(',', '.'));
-                        if (!isNaN(val) && val >= -5 && val <= 20) {
+                        if (!isNaN(val) && val >= -7 && val <= 20) {
                           netScore = Math.round(val * 10) / 10;
                           break;
                         }
@@ -1948,7 +1956,7 @@
                   }
                   
                   if (netScore !== null) {
-                    results[foundPlayer] = Math.min(15, Math.max(-5, netScore));
+                    results[foundPlayer] = Math.min(20, Math.max(-7, netScore));
                   }
                 }
               });
@@ -1975,13 +1983,13 @@
         if (m) {
           const rawName = normName(m[1]);
           const val = parseFloat(m[2].replace(',', '.'));
-          if (rawName && !isNaN(val) && val >= -5 && val <= 20) {
+          if (rawName && !isNaN(val) && val >= -7 && val <= 20) {
             const netScore = Math.round(val * 10) / 10;
             const foundPlayer = allPlayers.find(p => p && p !== 'BAY' && (rawName === normName(p) || rawName.includes(normName(p)) || normName(p).includes(rawName)));
             if (foundPlayer) {
-              results[foundPlayer] = Math.min(15, Math.max(-5, netScore));
+              results[foundPlayer] = Math.min(20, Math.max(-7, netScore));
             } else {
-              results[rawName] = Math.min(15, Math.max(-5, netScore));
+              results[rawName] = Math.min(20, Math.max(-7, netScore));
             }
           }
         }
@@ -2612,6 +2620,7 @@
       if (!playoff || !playoff.active) {
         if (controls) controls.innerHTML = '';
         const rankings = getGroupRankings();
+        const advCount = leagueData.advancingCount || 4;
         const defaultTarget = rankings.totalTop4 <= 44 ? 48 : (Math.ceil(rankings.totalTop4 / 8) * 8);
 
         let html = `
@@ -2619,7 +2628,7 @@
             <div class="bg-indigo-50/60 p-6 rounded-2xl border border-indigo-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
               <div>
                 <h3 class="text-xl font-extrabold text-indigo-950 mb-1">Grup Aşaması Tamamlandı mı?</h3>
-                <p class="text-sm text-indigo-700">Toplam <b>${rankings.groupCount} grup</b> var. Her gruptan 4 kişi olmak üzere standart <b>${rankings.totalTop4} öğrenci</b> çıkıyor.</p>
+                <p class="text-sm text-indigo-700">Toplam <b>${rankings.groupCount} grup</b> var. Her gruptan ${advCount} kişi olmak üzere standart <b>${rankings.totalTop4} öğrenci</b> çıkıyor.</p>
                 <p class="text-xs text-slate-500 mt-1">Elemeler <b>2 maç üzerinden toplam net üstünlüğüyle</b> oynanacaktır.</p>
               </div>
               <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-indigo-200 shadow-sm">
@@ -3215,21 +3224,64 @@
       const weekContainer = document.getElementById('tvWeekSelectContainer');
       const playoffContainer = document.getElementById('tvPlayoffRoundSelectContainer');
       const sloganContainer = document.getElementById('tvTop10SloganContainer');
+      const countContainer = document.getElementById('tvTop10CountContainer');
+      const countInput = document.getElementById('tvTop10CountInput');
+      if (countInput && leagueData && leagueData.tvTop10Count) {
+        countInput.value = leagueData.tvTop10Count;
+      }
       
       if (cat === 'weeklyMatches' || cat === 'weeklyTop10') {
         if (weekContainer) weekContainer.classList.remove('hidden');
         if (playoffContainer) playoffContainer.classList.add('hidden');
         if (sloganContainer) sloganContainer.classList.toggle('hidden', cat !== 'weeklyTop10');
+        if (countContainer) countContainer.classList.toggle('hidden', cat !== 'weeklyTop10');
         populateTvWeeks();
       } else if (cat === 'playoffs') {
         if (weekContainer) weekContainer.classList.add('hidden');
         if (playoffContainer) playoffContainer.classList.remove('hidden');
         if (sloganContainer) sloganContainer.classList.add('hidden');
+        if (countContainer) countContainer.classList.add('hidden');
         populateTvPlayoffRounds();
       } else {
         if (weekContainer) weekContainer.classList.add('hidden');
         if (playoffContainer) playoffContainer.classList.add('hidden');
         if (sloganContainer) sloganContainer.classList.add('hidden');
+        if (countContainer) countContainer.classList.add('hidden');
+      }
+      renderTvSlides();
+    };
+
+    window.onTvTop10CountManualChange = function() {
+      const countInput = document.getElementById('tvTop10CountInput');
+      const val = parseInt(countInput?.value, 10);
+      if (!isNaN(val) && val >= 1 && val <= 30) {
+        leagueData.tvTop10Count = val;
+        try { localStorage.setItem(getStorageKey(), JSON.stringify(leagueData)); } catch(e){}
+      }
+      renderTvSlides();
+    };
+
+    window.applyFairCutoffForTop10 = function() {
+      const countInput = document.getElementById('tvTop10CountInput');
+      const target = Math.max(1, Math.min(30, parseInt(countInput?.value, 10) || 10));
+      const scores = window.latestTvWeekPlayerScores || [];
+      if (scores.length > target && scores[target].score === scores[target - 1].score) {
+        const boundaryScore = scores[target - 1].score;
+        const fairCount = scores.filter(p => p.score > boundaryScore).length;
+        const allWithTieCount = scores.filter(p => p.score >= boundaryScore).length;
+        if (fairCount > 0 && countInput) {
+          countInput.value = fairCount;
+          leagueData.tvTop10Count = fairCount;
+          try { localStorage.setItem(getStorageKey(), JSON.stringify(leagueData)); } catch(e){}
+          renderTvSlides();
+          return;
+        } else if (allWithTieCount <= 20 && countInput) {
+          countInput.value = allWithTieCount;
+          leagueData.tvTop10Count = allWithTieCount;
+          try { localStorage.setItem(getStorageKey(), JSON.stringify(leagueData)); } catch(e){}
+          renderTvSlides();
+          return;
+        }
       }
       renderTvSlides();
     };
@@ -3364,31 +3416,26 @@
 
         // En yüksek netten en düşüğe sırala (Eşitlikte galibiyet alanlar ve alfabetik sıra)
         playerScores.sort((a, b) => (b.score - a.score) || ((b.won ? 1 : 0) - (a.won ? 1 : 0)) || a.name.localeCompare(b.name, 'tr-TR'));
+        window.latestTvWeekPlayerScores = playerScores;
 
         const sloganVal = document.getElementById('tvTop10SloganSelect')?.value || 'HAFTANIN YILDIZ KARMASI';
         const subTitleText = `${week}. ${sloganVal}`;
         if (!playerScores.length) {
           currentTvSlides.push(createTvEmptySlide(baseMainTitle, subTitleText, `${week}. Hafta için henüz girilmiş maç sonucu bulunamadı.`));
         } else {
-          // Maksimum 10 öğrenci ekrana sığar. Eğer 10. sıradaki öğrenciyle aynı neti yapan 11. ve sonraki öğrenciler varsa,
-          // hiçbir öğrenciye haksızlık olmaması için o net barajındaki grup kesilmez; bir üst net grubuna kadar olan öğrenciler gösterilir.
-          let top10 = playerScores.slice(0, 10);
-          if (playerScores.length > 10 && playerScores[10].score === playerScores[9].score) {
-            const boundaryScore = playerScores[9].score;
-            const fairList = playerScores.filter(p => p.score > boundaryScore);
-            if (fairList.length > 0) {
-              top10 = fairList;
-            }
-          }
+          const countInput = document.getElementById('tvTop10CountInput');
+          const desiredCount = Math.max(1, Math.min(30, parseInt(countInput?.value, 10) || leagueData.tvTop10Count || 10));
 
           let currentRank = 1;
-          top10.forEach((p, idx) => {
-            if (idx > 0 && p.score < top10[idx - 1].score) {
+          playerScores.forEach((p, idx) => {
+            if (idx > 0 && p.score < playerScores[idx - 1].score) {
               currentRank = idx + 1;
             }
             p.displayRank = currentRank;
           });
-          currentTvSlides.push(createTvTop10Slide(baseMainTitle, subTitleText, top10, week));
+
+          const selectedPlayers = playerScores.slice(0, desiredCount);
+          currentTvSlides.push(createTvTop10Slide(baseMainTitle, subTitleText, selectedPlayers, week, 1, 1));
         }
       } else if (cat === 'playoffs') {
         const selVal = document.getElementById('tvPlayoffRoundSelect') ? document.getElementById('tvPlayoffRoundSelect').value : '0';
@@ -3772,10 +3819,28 @@
       return c.toDataURL('image/png');
     }
 
-    function createTvTop10Slide(mainTitle, subTitle, top10, week) {
-      const half = Math.ceil(top10.length / 2);
-      const leftCol = top10.slice(0, half);
-      const rightCol = top10.slice(half);
+    function createTvTop10Slide(mainTitle, subTitle, top10, week, slideNum = 1, totalSlides = 1) {
+      const totalCount = top10.length;
+      const cols = totalCount > 16 ? 3 : 2;
+      const rowsPerCol = Math.ceil(totalCount / cols);
+
+      // Öğrenci sayısı arttıkça (5 satırdan fazla olduğunda) kart yüksekliğini, iç boşlukları, rozet ve yazı boyutunu orantılı küçült
+      const scaleFactor = rowsPerCol <= 5 ? 1 : Math.max(0.54, (650 - (rowsPerCol - 1) * 10) / (rowsPerCol * 112));
+      const rowGap = rowsPerCol <= 5 ? 18 : Math.max(8, Math.round(18 * scaleFactor));
+      const colGap = cols === 3 ? 20 : 28;
+      const cardMinH = Math.round(112 * scaleFactor);
+      const padY = Math.max(8, Math.round(18 * scaleFactor));
+      const padX = Math.max(16, Math.round(28 * scaleFactor));
+      const badgeSize = Math.max(40, Math.round(66 * scaleFactor));
+      const subFont = Math.max(11, Math.round(15 * Math.pow(scaleFactor, 0.75)));
+      const nameFont = Math.max(16, Math.round(27 * Math.pow(scaleFactor, 0.8)));
+      const innerGap = Math.max(12, Math.round(24 * scaleFactor));
+      const cardRadius = Math.max(12, Math.round(20 * scaleFactor));
+
+      const columnsData = [];
+      for (let c = 0; c < cols; c++) {
+        columnsData.push(top10.slice(c * rowsPerCol, (c + 1) * rowsPerCol));
+      }
 
       function renderCard(item, idx) {
         const r = item.displayRank || (idx + 1);
@@ -3800,14 +3865,14 @@
         const badgeUrl = createRankBadgeDataUrl(r);
 
         return `
-          <div style="background:${cardBg}; border:${borderStyle}; border-radius:20px; padding:18px 28px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 10px 24px rgba(0,0,0,0.35); min-height:112px;">
-            <div style="display:flex; align-items:center; gap:24px; flex:1;">
-              <img src="${badgeUrl}" style="width:66px; height:66px; display:block; flex-shrink:0; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.4));" alt="${r}" />
-              <div style="flex:1; transform:translateY(-2px);">
-                <div style="font-size:15px; font-weight:900; color:#fbbf24; letter-spacing:1.5px; margin-bottom:5px; text-transform:uppercase; line-height:1.1;">
-                  GRUP ${item.group} ${item.won ? '• HAFTANIN GALİBİ ✓' : ''}
+          <div style="background:${cardBg}; border:${borderStyle}; border-radius:${cardRadius}px; padding:${padY}px ${padX}px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 8px 20px rgba(0,0,0,0.35); min-height:${cardMinH}px; box-sizing:border-box;">
+            <div style="display:flex; align-items:center; gap:${innerGap}px; flex:1; min-width:0;">
+              <img src="${badgeUrl}" style="width:${badgeSize}px; height:${badgeSize}px; display:block; flex-shrink:0; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.4));" alt="${r}" />
+              <div style="flex:1; min-width:0; transform:translateY(-1px);">
+                <div style="font-size:${subFont}px; font-weight:900; color:#fbbf24; letter-spacing:1.2px; margin-bottom:3px; text-transform:uppercase; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                  GRUP ${item.group} • ⭐ YILDIZ KARMASI ÖĞRENCİSİ
                 </div>
-                <div style="font-size:27px; font-weight:900; color:#ffffff; line-height:1.2;">
+                <div style="font-size:${nameFont}px; font-weight:900; color:#ffffff; line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                   ${medalIcon}${item.name}
                 </div>
               </div>
@@ -3817,17 +3882,16 @@
       }
 
       const content = `
-        <div style="width:100%; display:grid; grid-template-columns:1fr 1fr; gap:28px; align-content:center;">
-          <div style="display:flex; flex-direction:column; gap:18px;">
-            ${leftCol.map((item, i) => renderCard(item, i)).join('')}
-          </div>
-          <div style="display:flex; flex-direction:column; gap:18px;">
-            ${rightCol.map((item, i) => renderCard(item, i + half)).join('')}
-          </div>
+        <div style="width:100%; display:grid; grid-template-columns:repeat(${cols}, minmax(0, 1fr)); gap:${colGap}px; align-content:center;">
+          ${columnsData.map((colItems, cIdx) => `
+            <div style="display:flex; flex-direction:column; gap:${rowGap}px;">
+              ${colItems.map((item, i) => renderCard(item, cIdx * rowsPerCol + i)).join('')}
+            </div>
+          `).join('')}
         </div>
       `;
 
-      return wrapTvSlideHtml(mainTitle, subTitle, 1, 1, content);
+      return wrapTvSlideHtml(mainTitle, subTitle, slideNum, totalSlides, content);
     }
 
     function createTvEmptySlide(mainTitle, subTitle, message) {
