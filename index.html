@@ -434,10 +434,10 @@
               <h2 class="text-2xl font-bold text-slate-900">💾 Yedekleme</h2>
               <p class="text-sm text-slate-500 mt-1">Sistem yedeği alma, geri yükleme ve haftalık maç skorlarını inceleme/düzenleme alanı.</p>
             </div>
-            <div class="w-full sm:w-48">
-              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Grup Seçimi</label>
-              <select id="fixtureGroupSelect" onchange="showFixtures()" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 outline-none font-semibold transition-all">
-                <option value="">Grup seçin...</option>
+            <div class="w-full sm:w-52">
+              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Hafta Seçimi</label>
+              <select id="fixtureWeekSelect" onchange="showFixtures()" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 outline-none font-semibold transition-all">
+                <option value="1">1. Hafta Maçları</option>
               </select>
             </div>
           </div>
@@ -453,30 +453,6 @@
           </div>
 
           <div id="fixtureContent"></div>
-        </div>
-
-        <!-- C. MANUEL VERİ GİRİŞİ (YEDEK ALAN) -->
-        <div id="dataentry" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
-          <div class="flex justify-between items-center mb-3">
-            <h2 class="text-2xl font-bold text-slate-900">📥 Manuel Veri Girişi (Metin Yapıştırma)</h2>
-          </div>
-          <p class="text-sm text-slate-500 mb-4">Excel'den kopyalanan iki sütunlu (Öğrenci Adı ve Puan/Net) verileri yapıştırarak manuel kaydetme alanı.</p>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
-            <div>
-              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Grup Seç:</label>
-              <select id="dataGroupSelect" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 outline-none font-semibold"><option value="">Grup seçin...</option></select>
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Hafta:</label>
-              <select id="dataWeekSelect" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 outline-none font-semibold"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select>
-            </div>
-            <div class="flex items-end gap-2">
-              <button id="btnPreview" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2.5 rounded-lg font-semibold shadow-sm cursor-pointer" onclick="previewFromPaste()">Önizle</button>
-              <button id="btnApplyTop" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2.5 rounded-lg font-semibold shadow-sm btn-disabled cursor-pointer" disabled onclick="window.applyFromTop()">Kaydet</button>
-            </div>
-          </div>
-          <textarea id="pasteInput" rows="6" class="w-full bg-slate-50 border border-slate-300 text-slate-700 rounded-xl p-4 font-mono text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="ÖĞRENCİ ADI[TAB]PUAN"></textarea>
-          <div id="previewArea" class="mt-6"></div>
         </div>
       </div>
 
@@ -596,54 +572,26 @@
           </div>
 
           <!-- Filtre ve Ayar Paneli -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-slate-50 border border-slate-200 p-5 rounded-2xl">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 bg-slate-50 border border-slate-200 p-5 rounded-2xl">
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Görsel Türü</label>
               <select id="tvCategorySelect" onchange="onTvCategoryChange()" class="w-full bg-white border border-slate-300 text-slate-900 text-sm font-semibold rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="weeklyTop10" selected>🌟 Haftanın Yıldız Karması</option>
                 <option value="weeklyMatches">⚽ Haftalık Maç Fikstürü & Eşleşmeleri</option>
-                <option value="weeklyTop10">🌟 Haftanın Yıldız Karması</option>
-                <option value="standings">📊 Lig Puan Durumu Tabloları</option>
                 <option value="playoffs">🏆 Eleme Turları Eşleşmeleri</option>
               </select>
             </div>
 
-            <div id="tvWeekSelectContainer" class="hidden">
+            <div id="tvWeekSelectContainer">
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Hafta Seçimi</label>
               <select id="tvWeekSelect" onchange="renderTvSlides()" class="w-full bg-white border border-slate-300 text-slate-900 text-sm font-semibold rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
               </select>
-            </div>
-
-            <div id="tvTop10SloganContainer" class="hidden">
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Sağ Üst Slogan Başlığı</label>
-              <select id="tvTop10SloganSelect" onchange="renderTvSlides()" class="w-full bg-white border border-slate-300 text-slate-900 text-sm font-semibold rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="HAFTANIN YILDIZ KARMASI" selected>🌟 HAFTANIN YILDIZ KARMASI</option>
-                <option value="HAFTANIN EN SKORERLERİ">🔥 HAFTANIN EN SKORERLERİ</option>
-                <option value="HAFTANIN NET KRALLARI">👑 HAFTANIN NET KRALLARI</option>
-                <option value="HAFTANIN RÜYA TAKIMI">🏆 HAFTANIN RÜYA TAKIMI</option>
-                <option value="HAFTANIN ZİRVE ORTAKLARI">⚡ HAFTANIN ZİRVE ORTAKLARI</option>
-                <option value="HAFTANIN ŞAMPİYONLAR LİGİ">🎯 HAFTANIN ŞAMPİYONLAR LİGİ</option>
-                <option value="HAFTANIN ALTIN KARESİ">✨ HAFTANIN ALTIN KARESİ</option>
-                <option value="HAFTANIN TAM İSABETLERİ">🚀 HAFTANIN TAM İSABETLERİ</option>
-              </select>
-            </div>
-
-            <div id="tvTop10CountContainer" class="hidden">
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Gösterilecek Öğrenci Sayısı</label>
-              <div class="flex items-center gap-2">
-                <input type="number" id="tvTop10CountInput" min="1" max="30" value="10" oninput="onTvTop10CountManualChange()" class="w-24 bg-white border border-slate-300 text-slate-900 text-base font-black text-center rounded-xl p-2 outline-none focus:ring-2 focus:ring-indigo-500" />
-                <button type="button" onclick="applyFairCutoffForTop10()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap shadow-sm" title="Aynı nette olan öğrencileri bölmemek için en uygun sayıyı otomatik seçer">⚖️ Eşit Nete Göre Öner</button>
-              </div>
             </div>
 
             <div id="tvPlayoffRoundSelectContainer" class="hidden">
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Eleme Turu Seçimi</label>
               <select id="tvPlayoffRoundSelect" onchange="renderTvSlides()" class="w-full bg-white border border-slate-300 text-slate-900 text-sm font-semibold rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
               </select>
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Özel Ana Başlık (İsteğe Bağlı)</label>
-              <input type="text" id="tvCustomTitleInput" oninput="renderTvSlides()" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Örn: 6. SINIFLAR" />
             </div>
           </div>
 
@@ -660,7 +608,7 @@
                 <span>📸 Slaytı İndir</span>
               </button>
               <button onclick="downloadAllTvSlidesZip()" id="btnDownloadAllTv" class="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer">
-                <span>📦 Tüm Slaytları İndir (ZIP)</span>
+                <span>📦 Tüm Slaytları İndir</span>
               </button>
             </div>
           </div>
@@ -883,11 +831,12 @@
           if (!leagueData.results) leagueData.results = {};
           if (!leagueData.bots) leagueData.bots = [];
           const migratedCloud = ensureGrade6AhmetAsafMigration(leagueData);
+          const fixedAbsentCloud = ensureAbsentZeroScores(leagueData);
           Object.keys(leagueData.groups || {}).forEach(g => {
             ensureFixturesForGroup(g);
             buildMatchIndex(g);
           });
-          if (migratedCloud && leagueRef) {
+          if ((migratedCloud || fixedAbsentCloud) && leagueRef) {
             try { leagueRef.set(leagueData); } catch(e){}
           }
           try { localStorage.setItem(getStorageKey(), JSON.stringify(leagueData)); } catch(e){}
@@ -987,7 +936,7 @@
       if (!leagueData.fixtures) leagueData.fixtures = {};
       if (!leagueData.results) leagueData.results = {};
       if (!leagueData.bots) leagueData.bots = [];
-      if (ensureGrade6AhmetAsafMigration(leagueData)) {
+      if (ensureGrade6AhmetAsafMigration(leagueData) || ensureAbsentZeroScores(leagueData)) {
         try { localStorage.setItem(getStorageKey(), JSON.stringify(leagueData)); } catch(e){}
       }
       let op = 59;
@@ -1150,6 +1099,25 @@
         return true;
       }
 
+      function ensureAbsentZeroScores(dataObj) {
+        if (!dataObj || !dataObj.results) return false;
+        let changed = false;
+        Object.keys(dataObj.results).forEach(matchId => {
+          const r = dataObj.results[matchId];
+          if (!r) return;
+          const hasH = r.homeScore !== '' && r.homeScore !== null && r.homeScore !== undefined;
+          const hasA = r.awayScore !== '' && r.awayScore !== null && r.awayScore !== undefined;
+          if (hasH && !hasA) {
+            r.awayScore = 0;
+            changed = true;
+          } else if (!hasH && hasA) {
+            r.homeScore = 0;
+            changed = true;
+          }
+        });
+        return changed;
+      }
+
       function loadGroupManager() {
       const g = document.getElementById('manageGroupSelect').value;
       const area = document.getElementById('groupManagerArea');
@@ -1304,10 +1272,13 @@
         const meta = leagueData.matchIndex[matchId];
         if (!meta || meta.group !== group) return;
         const r = leagueData.results[matchId];
-        if (r.homeScore==='' || r.awayScore==='' || r.homeScore==null || r.awayScore==null) return;
+        if (!r) return;
+        const hasH = r.homeScore !== '' && r.homeScore != null;
+        const hasA = r.awayScore !== '' && r.awayScore != null;
+        if (!hasH && !hasA) return;
         const hi = idx[meta.home], ai = idx[meta.away]; if (hi===undefined || ai===undefined) return;
-        const hs = parseNet(r.homeScore);
-        const as = parseNet(r.awayScore);
+        const hs = hasH ? parseNet(r.homeScore) : 0;
+        const as = hasA ? parseNet(r.awayScore) : 0;
         if (hs==='' || as==='') return;
         const H=S[hi], A=S[ai];
         H.played++; A.played++; 
@@ -1370,33 +1341,45 @@
     }
 
     function showFixtures(){
-      const g = document.getElementById('fixtureGroupSelect').value; const out = document.getElementById('fixtureContent');
-      if (!g){ out.innerHTML='<div class="p-8 text-center text-slate-400 font-medium">Lütfen yukarıdan bir grup seçin.</div>'; return; }
-      ensureFixturesForGroup(g); const fixtures = leagueData.fixtures[g]||[];
-      out.innerHTML = `
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          ${fixtures.map(week=>`
-            <div id="week_${week.week}" class="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm">
-              <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-200">
-                <h3 class="font-extrabold text-slate-800">Hafta ${week.week}</h3>
-                <span class="text-xs font-bold px-2 py-1 bg-white text-slate-500 rounded border border-slate-200 shadow-sm">${week.matches.length} Maç</span>
-              </div>
-              <div class="space-y-3">
-                ${week.matches.map(m=>`
-                  <div class="flex items-center gap-3 bg-white border border-slate-200 p-3 rounded-lg shadow-sm hover:border-indigo-300 transition-colors">
-                    <div class="flex-1 text-right font-semibold text-slate-700 text-sm leading-tight">${m.home}</div>
-                    <div class="flex items-center gap-1 bg-slate-50 rounded-md p-1 border border-slate-200">
-                      <input type="number" step="0.1" value="${leagueData.results[m.id]?.homeScore ?? ''}" oninput="updateScore('${m.id}','homeScore',this.value)" class="w-14 h-8 text-center bg-white border border-slate-300 rounded text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
-                      <span class="text-slate-400 font-bold">:</span>
-                      <input type="number" step="0.1" value="${leagueData.results[m.id]?.awayScore ?? ''}" oninput="updateScore('${m.id}','awayScore',this.value)" class="w-14 h-8 text-center bg-white border border-slate-300 rounded text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
-                    </div>
-                    <div class="flex-1 text-left font-semibold text-slate-700 text-sm leading-tight">${m.away}</div>
-                  </div>
-                `).join('')}
-              </div>
+      const sel = document.getElementById('fixtureWeekSelect');
+      const week = parseInt(sel?.value || '1', 10);
+      const out = document.getElementById('fixtureContent');
+      if (!out) return;
+      const groups = Object.keys(leagueData.groups || {}).sort();
+      if (!groups.length) {
+        out.innerHTML = '<div class="p-8 text-center text-slate-400 font-medium">Henüz oluşturulmuş grup bulunmuyor.</div>';
+        return;
+      }
+      let cardsHtml = '';
+      groups.forEach(g => {
+        ensureFixturesForGroup(g);
+        const fixtures = leagueData.fixtures[g] || [];
+        const weekObj = fixtures.find(w => w.week === week);
+        if (!weekObj || !weekObj.matches || !weekObj.matches.length) return;
+        cardsHtml += `
+          <div id="fixture_group_${g}_w_${week}" class="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-200">
+              <h3 class="font-extrabold text-slate-800">Grup ${g}</h3>
+              <span class="text-xs font-bold px-2.5 py-1 bg-white text-indigo-600 rounded border border-slate-200 shadow-sm">${week}. Hafta • ${weekObj.matches.length} Maç</span>
             </div>
-          `).join('')}
-        </div>`;
+            <div class="space-y-3">
+              ${weekObj.matches.map(m => `
+                <div class="flex items-center gap-3 bg-white border border-slate-200 p-3 rounded-lg shadow-sm hover:border-indigo-300 transition-colors">
+                  <div class="flex-1 text-right font-semibold text-slate-700 text-sm leading-tight">${m.home}</div>
+                  <div class="flex items-center gap-1 bg-slate-50 rounded-md p-1 border border-slate-200">
+                    <input type="number" step="0.1" value="${leagueData.results[m.id]?.homeScore ?? ''}" oninput="updateScore('${m.id}','homeScore',this.value)" class="w-14 h-8 text-center bg-white border border-slate-300 rounded text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <span class="text-slate-400 font-bold">:</span>
+                    <input type="number" step="0.1" value="${leagueData.results[m.id]?.awayScore ?? ''}" oninput="updateScore('${m.id}','awayScore',this.value)" class="w-14 h-8 text-center bg-white border border-slate-300 rounded text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
+                  </div>
+                  <div class="flex-1 text-left font-semibold text-slate-700 text-sm leading-tight">${m.away}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>`;
+      });
+      out.innerHTML = cardsHtml
+        ? `<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">${cardsHtml}</div>`
+        : '<div class="p-8 text-center text-slate-400 font-medium">Bu hafta için maç bulunamadı.</div>';
     }
     function updateScore(matchId, key, val){
       if (!leagueData.results[matchId]) leagueData.results[matchId] = {};
@@ -1467,6 +1450,24 @@
       // Oto yükleme hafta seçicisini de otomatik güncelle
       const autoSel = document.getElementById('autoUploadWeekSelect');
       if (autoSel && forceAutoSelect) autoSel.value = String(nextActive);
+
+      // Yedekleme / Manuel skor düzenleme hafta seçicisini doldur
+      const fixWeekSel = document.getElementById('fixtureWeekSelect');
+      if (fixWeekSel) {
+        const curFixWeek = fixWeekSel.value;
+        fixWeekSel.innerHTML = '';
+        const totalW = maxWeek || 9;
+        for (let w = 1; w <= totalW; w++) {
+          fixWeekSel.insertAdjacentHTML('beforeend', `<option value="${w}">${w}. Hafta Maçları</option>`);
+        }
+        const defaultEditWeek = nextActive > 1 ? nextActive - 1 : 1;
+        if (forceAutoSelect || !curFixWeek || parseInt(curFixWeek, 10) > totalW) {
+          fixWeekSel.value = String(defaultEditWeek);
+        } else {
+          fixWeekSel.value = curFixWeek;
+        }
+        showFixtures();
+      }
     }
     function showUpcoming(){
       const sel = document.getElementById('upcomingWeekSelect'); const week = parseInt(sel?.value||'1',10);
@@ -1482,13 +1483,10 @@
             </div>
             <div class="p-4 space-y-3">
               ${w.matches.map(m=>{
-                const r = leagueData.results[m.id];
-                const has = r && r.homeScore!=='' && r.awayScore!=='' && r.homeScore!=null && r.awayScore!=null;
                 return `<div class="flex items-center gap-2">
                   <div class="flex-1 text-right text-sm font-semibold text-slate-700">${m.home}</div>
                   <div class="px-2 text-xs font-bold text-slate-300">VS</div>
                   <div class="flex-1 text-left text-sm font-semibold text-slate-700">${m.away}</div>
-                  ${has ? `<span class="ml-1 text-xs text-emerald-600 font-bold" title="Maç Tamamlandı">✓</span>` : ''}
                 </div>`;
               }).join('')}
             </div>
@@ -2037,7 +2035,7 @@
       const previewArea = document.getElementById('autoPreviewArea');
       try {
         
-        let updates = []; let foundCount = 0; let totalExpected = 0; let matchCards = "";
+        let updates = []; let foundCount = 0; let absentCount = 0; let totalExpected = 0; let matchCards = "";
         
         Object.keys(leagueData.groups || {}).sort().forEach(g => {
           const fixtures = leagueData.fixtures[g] || [];
@@ -2057,6 +2055,13 @@
               if (fk) hScore = extractedScores[fk];
             }
             if (hScore === undefined && leagueData.bots.includes(normName(m.home))) hScore = 14;
+            const hAbsent = (hScore === undefined);
+            if (hAbsent) {
+              hScore = 0;
+              absentCount++;
+            } else {
+              foundCount++;
+            }
             
             let aScore = extractedScores[m.away] ?? extractedScores[normName(m.away)];
             if (aScore === undefined) {
@@ -2065,22 +2070,28 @@
               if (fk) aScore = extractedScores[fk];
             }
             if (aScore === undefined && leagueData.bots.includes(normName(m.away))) aScore = 14;
-            
-            if (hScore !== undefined) foundCount++;
-            if (aScore !== undefined) foundCount++;
-            
-            if (hScore !== undefined || aScore !== undefined) {
-              updates.push({ matchId: m.id, homeScore: hScore !== undefined ? hScore : (leagueData.results[m.id]?.homeScore ?? ''), awayScore: aScore !== undefined ? aScore : (leagueData.results[m.id]?.awayScore ?? '') });
+            const aAbsent = (aScore === undefined);
+            if (aAbsent) {
+              aScore = 0;
+              absentCount++;
+            } else {
+              foundCount++;
             }
+            
+            updates.push({ matchId: m.id, homeScore: hScore, awayScore: aScore });
             
             groupHtml += `
               <div class="flex items-center justify-between bg-white border border-slate-200 p-3 rounded-lg shadow-sm">
-                <div class="flex-1 text-right text-sm font-semibold truncate ${hScore !== undefined ? 'text-slate-800' : 'text-red-400'}">${m.home}</div>
-                <div class="mx-3 flex gap-1 font-mono font-bold">
-                  <span class="w-12 text-center bg-slate-100 rounded py-0.5 text-sm">${hScore !== undefined ? formatNet(hScore) : '?'}</span>-
-                  <span class="w-12 text-center bg-slate-100 rounded py-0.5 text-sm">${aScore !== undefined ? formatNet(aScore) : '?'}</span>
+                <div class="flex-1 text-right text-sm font-semibold truncate ${hAbsent ? 'text-amber-600' : 'text-slate-800'}" title="${hAbsent ? 'Sınava girmedi - Otomatik 0 verildi' : m.home}">
+                  ${m.home} ${hAbsent ? '<span class="text-[10px] font-bold text-amber-600">(Girmedi → 0)</span>' : ''}
                 </div>
-                <div class="flex-1 text-left text-sm font-semibold truncate ${aScore !== undefined ? 'text-slate-800' : 'text-red-400'}">${m.away}</div>
+                <div class="mx-3 flex gap-1 font-mono font-bold">
+                  <span class="w-12 text-center ${hAbsent ? 'bg-amber-100 text-amber-800' : 'bg-slate-100'} rounded py-0.5 text-sm">${formatNet(hScore)}</span>-
+                  <span class="w-12 text-center ${aAbsent ? 'bg-amber-100 text-amber-800' : 'bg-slate-100'} rounded py-0.5 text-sm">${formatNet(aScore)}</span>
+                </div>
+                <div class="flex-1 text-left text-sm font-semibold truncate ${aAbsent ? 'text-amber-600' : 'text-slate-800'}" title="${aAbsent ? 'Sınava girmedi - Otomatik 0 verildi' : m.away}">
+                  ${m.away} ${aAbsent ? '<span class="text-[10px] font-bold text-amber-600">(Girmedi → 0)</span>' : ''}
+                </div>
               </div>`;
           });
           groupHtml += `</div></div>`;
@@ -2092,8 +2103,8 @@
         previewArea.innerHTML = `
           <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 mb-6 shadow-sm">
             <h3 class="text-indigo-900 font-bold text-lg mb-2">📊 Önizleme Raporu (Net Puanlar)</h3>
-            <p class="text-indigo-700 font-medium">Sistem bu haftaki <b>${totalExpected}</b> oyuncudan <b>${foundCount}</b> tanesinin net sonucunu buldu (Botlar otomatik eklendi).</p>
-            ${foundCount < totalExpected ? `<p class="text-red-600 font-bold text-sm mt-2">⚠️ Bulunamayan isimler kırmızı ile işaretlendi.</p>` : `<p class="text-emerald-600 font-bold text-sm mt-2">✅ Bütün öğrenciler eksiksiz bulundu!</p>`}
+            <p class="text-indigo-700 font-medium">Sistem bu haftaki <b>${totalExpected}</b> oyuncudan <b>${foundCount}</b> tanesinin net sonucunu listede buldu.</p>
+            ${absentCount > 0 ? `<p class="text-amber-600 font-bold text-sm mt-2">ℹ️ Listede yer almayan (sınava girmeyen) <b>${absentCount}</b> öğrenciye maçın oynanmış sayılması için otomatik olarak <b>0 net</b> atandı.</p>` : `<p class="text-emerald-600 font-bold text-sm mt-2">✅ Bütün öğrenciler eksiksiz bulundu!</p>`}
             <button id="btnAutoApply" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-md transition-all cursor-pointer" onclick="window.applyAutoUpload()">Sonuçları Aktar</button>
           </div>
           ${matchCards}
@@ -2488,12 +2499,13 @@
         }
 
         let filledCount = 0;
+        let absentCount = 0;
 
         curRound.matches.forEach((m) => {
           if (!m.player1 || !m.player2) return;
           
           // Player 1
-          if (m.player1.name && m.player1.name !== 'BAY') {
+          if (m.player1.name && m.player1.name !== 'BAY' && m.player1.name !== 'Belirlenmedi') {
             let s1 = extractedScores[m.player1.name];
             if (s1 === undefined) {
               const p1Norm = normName(m.player1.name);
@@ -2504,11 +2516,15 @@
               if (leg === 1) m.m1_score1 = s1;
               else m.m2_score1 = s1;
               filledCount++;
+            } else {
+              if (leg === 1) m.m1_score1 = 0;
+              else m.m2_score1 = 0;
+              absentCount++;
             }
           }
 
           // Player 2
-          if (m.player2.name && m.player2.name !== 'BAY') {
+          if (m.player2.name && m.player2.name !== 'BAY' && m.player2.name !== 'Belirlenmedi') {
             let s2 = extractedScores[m.player2.name];
             if (s2 === undefined) {
               const p2Norm = normName(m.player2.name);
@@ -2519,6 +2535,10 @@
               if (leg === 1) m.m1_score2 = s2;
               else m.m2_score2 = s2;
               filledCount++;
+            } else {
+              if (leg === 1) m.m1_score2 = 0;
+              else m.m2_score2 = 0;
+              absentCount++;
             }
           }
 
@@ -2530,7 +2550,7 @@
         saveData();
         renderAdminPlayoffs();
         renderPublicPlayoffs();
-        alert(`✅ ${file.name} başarıyla işlendi!\n\n${curRound.title} aşamasındaki ${filledCount} öğrencinin ${leg}. Maç netleri sisteme kaydedildi.`);
+        alert(`✅ ${file.name} başarıyla işlendi!\n\n${curRound.title} aşamasındaki ${filledCount} öğrencinin ${leg}. Maç netleri sisteme kaydedildi.${absentCount > 0 ? `\nℹ️ Sınava girmeyen ${absentCount} öğrenciye otomatik olarak 0 net verildi.` : ''}`);
       } catch(err) {
         console.error("Playoff upload error:", err);
         alert("❌ Dosya okunurken hata oluştu: " + err.message);
@@ -3215,38 +3235,28 @@
     window.initTvStudio = function() {
       const b = document.getElementById('tvGradeBadge');
       if (b) b.innerText = `${currentGrade}. Sınıflar`;
+      const catSel = document.getElementById('tvCategorySelect');
+      if (catSel) catSel.value = 'weeklyTop10';
       onTvCategoryChange();
       setTimeout(() => updateTvSlidePreview(), 50);
     };
 
     window.onTvCategoryChange = function() {
-      const cat = document.getElementById('tvCategorySelect') ? document.getElementById('tvCategorySelect').value : 'standings';
+      const cat = document.getElementById('tvCategorySelect') ? document.getElementById('tvCategorySelect').value : 'weeklyTop10';
       const weekContainer = document.getElementById('tvWeekSelectContainer');
       const playoffContainer = document.getElementById('tvPlayoffRoundSelectContainer');
-      const sloganContainer = document.getElementById('tvTop10SloganContainer');
-      const countContainer = document.getElementById('tvTop10CountContainer');
-      const countInput = document.getElementById('tvTop10CountInput');
-      if (countInput && leagueData && leagueData.tvTop10Count) {
-        countInput.value = leagueData.tvTop10Count;
-      }
       
       if (cat === 'weeklyMatches' || cat === 'weeklyTop10') {
         if (weekContainer) weekContainer.classList.remove('hidden');
         if (playoffContainer) playoffContainer.classList.add('hidden');
-        if (sloganContainer) sloganContainer.classList.toggle('hidden', cat !== 'weeklyTop10');
-        if (countContainer) countContainer.classList.toggle('hidden', cat !== 'weeklyTop10');
         populateTvWeeks();
       } else if (cat === 'playoffs') {
         if (weekContainer) weekContainer.classList.add('hidden');
         if (playoffContainer) playoffContainer.classList.remove('hidden');
-        if (sloganContainer) sloganContainer.classList.add('hidden');
-        if (countContainer) countContainer.classList.add('hidden');
         populateTvPlayoffRounds();
       } else {
         if (weekContainer) weekContainer.classList.add('hidden');
         if (playoffContainer) playoffContainer.classList.add('hidden');
-        if (sloganContainer) sloganContainer.classList.add('hidden');
-        if (countContainer) countContainer.classList.add('hidden');
       }
       renderTvSlides();
     };
@@ -3335,27 +3345,13 @@
     }
 
     window.renderTvSlides = function() {
-      const cat = document.getElementById('tvCategorySelect') ? document.getElementById('tvCategorySelect').value : 'standings';
-      const customTitle = document.getElementById('tvCustomTitleInput') ? document.getElementById('tvCustomTitleInput').value.trim() : '';
-      const baseMainTitle = customTitle || `${currentGrade}. SINIFLAR`;
+      const cat = document.getElementById('tvCategorySelect') ? document.getElementById('tvCategorySelect').value : 'weeklyTop10';
+      const baseMainTitle = `${currentGrade}. SINIFLAR`;
 
       currentTvSlides = [];
       activeTvSlideIndex = 0;
 
-      if (cat === 'standings') {
-        const groups = Object.keys(leagueData.groups || {}).filter(g => (leagueData.groups[g] || []).some(m => m && m.trim()));
-        if (!groups.length) {
-          currentTvSlides.push(createTvEmptySlide(baseMainTitle, "PUAN DURUMU", "Henüz grup veya öğrenci kaydı bulunamadı."));
-        } else {
-          for (let i = 0; i < groups.length; i += 2) {
-            const g1 = groups[i];
-            const g2 = groups[i + 1] || null;
-            const slideNum = Math.floor(i / 2) + 1;
-            const totalSlides = Math.ceil(groups.length / 2);
-            currentTvSlides.push(createTvStandingsSlide(baseMainTitle, "LİG PUAN DURUMU", g1, g2, slideNum, totalSlides));
-          }
-        }
-      } else if (cat === 'weeklyMatches') {
+      if (cat === 'weeklyMatches') {
         const week = document.getElementById('tvWeekSelect') ? parseInt(document.getElementById('tvWeekSelect').value) || 1 : 1;
         const allMatches = [];
         Object.keys(leagueData.fixtures || {}).forEach(g => {
@@ -3389,6 +3385,29 @@
         const playerScores = [];
         const seen = new Set();
 
+        // O haftaya (week) kadar olan kümülatif toplam netleri hesapla
+        const cumulNetMap = {};
+        Object.keys(leagueData.fixtures || {}).sort().forEach(g => {
+          (leagueData.fixtures[g] || []).forEach(weekObj => {
+            if (weekObj.week <= week) {
+              (weekObj.matches || []).forEach(m => {
+                if (m.home === 'BAY' || m.away === 'BAY') return;
+                const res = (leagueData.results && leagueData.results[m.id]) || {};
+                const hs = parseNet(res.homeScore);
+                const as = parseNet(res.awayScore);
+                if (hs !== '') {
+                  const hk = normName(m.home);
+                  cumulNetMap[hk] = Math.round(((cumulNetMap[hk] || 0) + hs) * 10) / 10;
+                }
+                if (as !== '') {
+                  const ak = normName(m.away);
+                  cumulNetMap[ak] = Math.round(((cumulNetMap[ak] || 0) + as) * 10) / 10;
+                }
+              });
+            }
+          });
+        });
+
         Object.keys(leagueData.fixtures || {}).sort().forEach(g => {
           (leagueData.fixtures[g] || []).forEach(weekObj => {
             if (weekObj.week === week) {
@@ -3402,39 +3421,33 @@
                 const isAwayBot = leagueData.bots && leagueData.bots.includes(normName(m.away));
 
                 if (hs !== '' && !isHomeBot && !seen.has(normName(m.home))) {
-                  seen.add(normName(m.home));
-                  playerScores.push({ name: m.home, group: g, score: hs, opponent: m.away, won: (as !== '' && hs > as) });
+                  const hk = normName(m.home);
+                  seen.add(hk);
+                  playerScores.push({ name: m.home, group: g, score: hs, cumulNet: cumulNetMap[hk] ?? hs, opponent: m.away, won: (as !== '' && hs > as) });
                 }
                 if (as !== '' && !isAwayBot && !seen.has(normName(m.away))) {
-                  seen.add(normName(m.away));
-                  playerScores.push({ name: m.away, group: g, score: as, opponent: m.home, won: (hs !== '' && as > hs) });
+                  const ak = normName(m.away);
+                  seen.add(ak);
+                  playerScores.push({ name: m.away, group: g, score: as, cumulNet: cumulNetMap[ak] ?? as, opponent: m.home, won: (hs !== '' && as > hs) });
                 }
               });
             }
           });
         });
 
-        // En yüksek netten en düşüğe sırala (Eşitlikte galibiyet alanlar ve alfabetik sıra)
-        playerScores.sort((a, b) => (b.score - a.score) || ((b.won ? 1 : 0) - (a.won ? 1 : 0)) || a.name.localeCompare(b.name, 'tr-TR'));
+        // Sıralama Mantığı:
+        // 1. O haftaki net puanı (yüksekten düşüğe)
+        // 2. Eşitlikte o haftaya kadarki toplam net puanı (yüksekten düşüğe)
+        // 3. İlk hafta veya toplam net eşitliğinde alfabetik sıra (A-Z)
+        playerScores.sort((a, b) => (b.score - a.score) || (b.cumulNet - a.cumulNet) || a.name.localeCompare(b.name, 'tr-TR'));
         window.latestTvWeekPlayerScores = playerScores;
 
-        const sloganVal = document.getElementById('tvTop10SloganSelect')?.value || 'HAFTANIN YILDIZ KARMASI';
-        const subTitleText = `${week}. ${sloganVal}`;
+        const subTitleText = `${week}. HAFTANIN YILDIZ KARMASI`;
         if (!playerScores.length) {
           currentTvSlides.push(createTvEmptySlide(baseMainTitle, subTitleText, `${week}. Hafta için henüz girilmiş maç sonucu bulunamadı.`));
         } else {
-          const countInput = document.getElementById('tvTop10CountInput');
-          const desiredCount = Math.max(1, Math.min(30, parseInt(countInput?.value, 10) || leagueData.tvTop10Count || 10));
-
-          let currentRank = 1;
-          playerScores.forEach((p, idx) => {
-            if (idx > 0 && p.score < playerScores[idx - 1].score) {
-              currentRank = idx + 1;
-            }
-            p.displayRank = currentRank;
-          });
-
-          const selectedPlayers = playerScores.slice(0, desiredCount);
+          // Her hafta en iyi 11 öğrenci (Kaleci + 3-4-3 dizilişi)
+          const selectedPlayers = playerScores.slice(0, 11);
           currentTvSlides.push(createTvTop10Slide(baseMainTitle, subTitleText, selectedPlayers, week, 1, 1));
         }
       } else if (cat === 'playoffs') {
@@ -3819,75 +3832,196 @@
       return c.toDataURL('image/png');
     }
 
+    function createStarJerseySvgDataUrl() {
+      if (window._cachedStarJerseyDataUrl) return window._cachedStarJerseyDataUrl;
+      const c = document.createElement('canvas');
+      c.width = 160;
+      c.height = 160;
+      const ctx = c.getContext('2d');
+
+      // Dış altın hale / rozet çemberi
+      const glow = ctx.createRadialGradient(80, 80, 20, 80, 80, 74);
+      glow.addColorStop(0, 'rgba(251, 191, 36, 0.42)');
+      glow.addColorStop(0.65, 'rgba(30, 58, 138, 0.85)');
+      glow.addColorStop(1, 'rgba(15, 23, 42, 0.98)');
+      ctx.beginPath();
+      ctx.arc(80, 80, 68, 0, Math.PI * 2);
+      ctx.fillStyle = glow;
+      ctx.fill();
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = '#fbbf24';
+      ctx.stroke();
+
+      // İç çember halkası
+      ctx.beginPath();
+      ctx.arc(80, 80, 58, 0, Math.PI * 2);
+      ctx.lineWidth = 1.8;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+      ctx.stroke();
+
+      // Forma (Jersey) silüeti
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(56, 44);
+      ctx.lineTo(68, 44);
+      ctx.quadraticCurveTo(80, 56, 92, 44);
+      ctx.lineTo(104, 44);
+      ctx.lineTo(124, 62);
+      ctx.lineTo(113, 77);
+      ctx.lineTo(102, 68);
+      ctx.lineTo(102, 114);
+      ctx.lineTo(58, 114);
+      ctx.lineTo(58, 68);
+      ctx.lineTo(47, 77);
+      ctx.lineTo(36, 62);
+      ctx.closePath();
+
+      const jGrad = ctx.createLinearGradient(40, 44, 120, 114);
+      jGrad.addColorStop(0, '#2563eb');
+      jGrad.addColorStop(0.5, '#1d4ed8');
+      jGrad.addColorStop(1, '#1e3a8a');
+      ctx.fillStyle = jGrad;
+      ctx.fill();
+      ctx.lineWidth = 3.2;
+      ctx.strokeStyle = '#fde68a';
+      ctx.stroke();
+
+      // Göğüste Parlak Altın Yıldız
+      const cx = 80, cy = 82, spikes = 5, outerR = 17, innerR = 7.5;
+      let rot = Math.PI / 2 * 3;
+      const step = Math.PI / spikes;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - outerR);
+      for (let i = 0; i < spikes; i++) {
+        ctx.lineTo(cx + Math.cos(rot) * outerR, cy + Math.sin(rot) * outerR);
+        rot += step;
+        ctx.lineTo(cx + Math.cos(rot) * innerR, cy + Math.sin(rot) * innerR);
+        rot += step;
+      }
+      ctx.closePath();
+      ctx.fillStyle = '#fbbf24';
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+      ctx.restore();
+
+      window._cachedStarJerseyDataUrl = c.toDataURL('image/png');
+      return window._cachedStarJerseyDataUrl;
+    }
+
+    function getTacticalFormationRows(n) {
+      // Dikey Saha (Altta Kale -> Yukarı Hücum): Üstte 3 Forvet, Ortada 4 Orta Saha, Altta 3 Defans, En Altta Kalede 1 Kaleci
+      if (n === 11) return [3, 4, 3, 1];
+      const presets = {
+        1: [1],
+        2: [1, 1],
+        3: [2, 1],
+        4: [1, 2, 1],
+        5: [2, 2, 1],
+        6: [2, 3, 1],
+        7: [2, 2, 2, 1],
+        8: [2, 3, 2, 1],
+        9: [2, 3, 3, 1],
+        10: [3, 3, 3, 1]
+      };
+      if (presets[n]) return presets[n];
+      return [3, 4, 3, 1];
+    }
+
     function createTvTop10Slide(mainTitle, subTitle, top10, week, slideNum = 1, totalSlides = 1) {
       const totalCount = top10.length;
-      const cols = totalCount > 16 ? 3 : 2;
-      const rowsPerCol = Math.ceil(totalCount / cols);
+      const rowCounts = getTacticalFormationRows(totalCount);
 
-      // Öğrenci sayısı arttıkça (5 satırdan fazla olduğunda) kart yüksekliğini, iç boşlukları, rozet ve yazı boyutunu orantılı küçült
-      const scaleFactor = rowsPerCol <= 5 ? 1 : Math.max(0.54, (650 - (rowsPerCol - 1) * 10) / (rowsPerCol * 112));
-      const rowGap = rowsPerCol <= 5 ? 18 : Math.max(8, Math.round(18 * scaleFactor));
-      const colGap = cols === 3 ? 20 : 28;
-      const cardMinH = Math.round(112 * scaleFactor);
-      const padY = Math.max(8, Math.round(18 * scaleFactor));
-      const padX = Math.max(16, Math.round(28 * scaleFactor));
-      const badgeSize = Math.max(40, Math.round(66 * scaleFactor));
-      const subFont = Math.max(11, Math.round(15 * Math.pow(scaleFactor, 0.75)));
-      const nameFont = Math.max(16, Math.round(27 * Math.pow(scaleFactor, 0.8)));
-      const innerGap = Math.max(12, Math.round(24 * scaleFactor));
-      const cardRadius = Math.max(12, Math.round(20 * scaleFactor));
+      const jerseySize = 62;
+      const cardWidth = 345;
+      const nameFont = 19.5;
+      const grpFont = 12;
+      const padY = 7;
+      const padX = 14;
 
-      const columnsData = [];
-      for (let c = 0; c < cols; c++) {
-        columnsData.push(top10.slice(c * rowsPerCol, (c + 1) * rowsPerCol));
-      }
+      const jerseyImg = createStarJerseySvgDataUrl();
 
-      function renderCard(item, idx) {
-        const r = item.displayRank || (idx + 1);
-        let borderStyle = '1px solid rgba(255,255,255,0.14)';
-        let cardBg = 'rgba(15, 23, 42, 0.78)';
-        let medalIcon = '';
+      // En yüksek net yapanlardan başlayarak yukarıdan aşağıya:
+      // 1. Satır (3 Forvet): İlk 3 öğrenci
+      // 2. Satır (4 Orta Saha): 4-7. öğrenciler
+      // 3. Satır (3 Defans): 8-10. öğrenciler
+      // 4. Satır (1 Kaleci): 11. öğrenci
+      let cursor = 0;
+      const rowsHtml = rowCounts.map((countInRow) => {
+        const rowPlayers = top10.slice(cursor, cursor + countInRow);
+        cursor += countInRow;
 
-        if (r === 1) {
-          borderStyle = '2px solid rgba(251, 191, 36, 0.75)';
-          cardBg = 'linear-gradient(135deg, rgba(251, 191, 36, 0.16), rgba(15, 23, 42, 0.88))';
-          medalIcon = '👑 ';
-        } else if (r === 2) {
-          borderStyle = '2px solid rgba(226, 232, 240, 0.6)';
-          cardBg = 'linear-gradient(135deg, rgba(226, 232, 240, 0.12), rgba(15, 23, 42, 0.85))';
-          medalIcon = '🥈 ';
-        } else if (r === 3) {
-          borderStyle = '2px solid rgba(245, 158, 11, 0.55)';
-          cardBg = 'linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(15, 23, 42, 0.85))';
-          medalIcon = '🥉 ';
-        }
+        const playersHtml = rowPlayers.map((item) => {
+          return `
+            <div style="width:${cardWidth}px; display:flex; flex-direction:column; align-items:center; position:relative; z-index:5;">
+              <!-- Üstte Yıldız Forma / Rozet İkonu (Tüm 11 oyuncu aynı forma) -->
+              <div style="position:relative; margin-bottom:-13px; z-index:6; display:flex; align-items:center; justify-content:center;">
+                <img src="${jerseyImg}" style="width:${jerseySize}px; height:${jerseySize}px; display:block; filter:drop-shadow(0 8px 16px rgba(0,0,0,0.65));" alt="Forma" />
+              </div>
 
-        const badgeUrl = createRankBadgeDataUrl(r);
-
-        return `
-          <div style="background:${cardBg}; border:${borderStyle}; border-radius:${cardRadius}px; padding:${padY}px ${padX}px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 8px 20px rgba(0,0,0,0.35); min-height:${cardMinH}px; box-sizing:border-box;">
-            <div style="display:flex; align-items:center; gap:${innerGap}px; flex:1; min-width:0;">
-              <img src="${badgeUrl}" style="width:${badgeSize}px; height:${badgeSize}px; display:block; flex-shrink:0; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.4));" alt="${r}" />
-              <div style="flex:1; min-width:0; transform:translateY(-1px);">
-                <div style="font-size:${subFont}px; font-weight:900; color:#fbbf24; letter-spacing:1.2px; margin-bottom:3px; text-transform:uppercase; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                  GRUP ${item.group} • ⭐ YILDIZ KARMASI ÖĞRENCİSİ
+              <!-- Oyuncu İsim Plakası (Sıra numarası yok, sadece Grup + Öğrenci Adı) -->
+              <div style="width:100%; box-sizing:border-box; background:linear-gradient(135deg, rgba(10, 19, 42, 0.94) 0%, rgba(20, 36, 74, 0.92) 50%, rgba(10, 19, 42, 0.94) 100%); border:2px solid rgba(251, 191, 36, 0.65); border-radius:16px; padding:${padY + 9}px ${padX}px ${padY}px ${padX}px; text-align:center; box-shadow:0 12px 26px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.22);">
+                <div style="display:inline-block; background:rgba(251, 191, 36, 0.16); border:1px solid rgba(251, 191, 36, 0.45); border-radius:999px; padding:2px 12px; font-size:${grpFont}px; font-weight:900; color:#fbbf24; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:3px; line-height:1.2;">
+                  ⭐ GRUP ${item.group}
                 </div>
-                <div style="font-size:${nameFont}px; font-weight:900; color:#ffffff; line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                  ${medalIcon}${item.name}
+                <div style="font-size:${nameFont}px; font-weight:900; color:#ffffff; letter-spacing:0.4px; line-height:1.2; text-shadow:0 2px 8px rgba(0,0,0,0.6); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                  ${item.name}
                 </div>
               </div>
             </div>
+          `;
+        }).join('');
+
+        return `
+          <div style="width:100%; display:flex; justify-content:space-evenly; align-items:center; position:relative; z-index:5;">
+            ${playersHtml}
           </div>
         `;
-      }
+      }).join('');
 
       const content = `
-        <div style="width:100%; display:grid; grid-template-columns:repeat(${cols}, minmax(0, 1fr)); gap:${colGap}px; align-content:center;">
-          ${columnsData.map((colItems, cIdx) => `
-            <div style="display:flex; flex-direction:column; gap:${rowGap}px;">
-              ${colItems.map((item, i) => renderCard(item, cIdx * rowsPerCol + i)).join('')}
-            </div>
-          `).join('')}
+        <div style="width:100%; height:100%; position:relative; border-radius:28px; overflow:hidden; border:3px solid rgba(251, 191, 36, 0.55); box-shadow:0 20px 50px rgba(0,0,0,0.65), inset 0 0 60px rgba(0,0,0,0.6); background:linear-gradient(180deg, rgba(12, 38, 56, 0.88) 0%, rgba(16, 58, 70, 0.84) 50%, rgba(12, 38, 56, 0.88) 100%); display:flex; flex-direction:column; justify-content:space-between; padding:14px 28px 18px 28px; box-sizing:border-box;">
+          
+          <!-- Dikey Taktik Tahtası & Matematik Sahası Çizgileri (SVG - Altta Kale & Ceza Sahası) -->
+          <svg viewBox="0 0 1800 720" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; opacity:0.38;">
+            <!-- Yatay Çim/Tahta Şeritleri -->
+            <rect x="0" y="0" width="1800" height="120" fill="rgba(255,255,255,0.03)" />
+            <rect x="0" y="240" width="1800" height="120" fill="rgba(255,255,255,0.03)" />
+            <rect x="0" y="480" width="1800" height="120" fill="rgba(255,255,255,0.03)" />
+
+            <!-- Dış Saha Çizgisi -->
+            <rect x="28" y="18" width="1744" height="684" rx="18" fill="none" stroke="#e2e8f0" stroke-width="4" />
+            <!-- Yatay Orta Saha Çizgisi ve Orta Yuvarlak -->
+            <line x1="28" y1="360" x2="1772" y2="360" stroke="#e2e8f0" stroke-width="3.5" stroke-dasharray="12 8" />
+            <circle cx="900" cy="360" r="105" fill="none" stroke="#fbbf24" stroke-width="3.5" />
+            <circle cx="900" cy="360" r="8" fill="#fbbf24" />
+
+            <!-- Üst Ceza Sahası & Kale -->
+            <rect x="560" y="18" width="680" height="130" fill="none" stroke="#e2e8f0" stroke-width="3.5" />
+            <rect x="730" y="18" width="340" height="58" fill="none" stroke="#e2e8f0" stroke-width="3" />
+            <path d="M 780 148 A 140 75 0 0 0 1020 148" fill="none" stroke="#e2e8f0" stroke-width="3" />
+
+            <!-- Alt Ceza Sahası & Kale (Kaleci Bölgesi) -->
+            <rect x="560" y="572" width="680" height="130" fill="rgba(251, 191, 36, 0.05)" stroke="#fbbf24" stroke-width="3.5" />
+            <rect x="730" y="644" width="340" height="58" fill="none" stroke="#e2e8f0" stroke-width="3" />
+            <path d="M 780 572 A 140 75 0 0 1 1020 572" fill="none" stroke="#fbbf24" stroke-width="3" />
+
+            <!-- Köşe Yayları -->
+            <path d="M 28 48 A 30 30 0 0 0 58 18" fill="none" stroke="#fbbf24" stroke-width="3" />
+            <path d="M 1742 18 A 30 30 0 0 0 1772 48" fill="none" stroke="#fbbf24" stroke-width="3" />
+            <path d="M 28 672 A 30 30 0 0 1 58 702" fill="none" stroke="#fbbf24" stroke-width="3" />
+            <path d="M 1742 702 A 30 30 0 0 1 1772 672" fill="none" stroke="#fbbf24" stroke-width="3" />
+
+            <!-- Taktik Tahtası Matematik Sembolleri (Tebeşir Stili) -->
+            <text x="90" y="90" fill="rgba(255,255,255,0.28)" font-size="42" font-weight="900" font-family="serif">∑ x²</text>
+            <text x="1600" y="90" fill="rgba(255,255,255,0.28)" font-size="42" font-weight="900" font-family="serif">π ≈ 3,14</text>
+            <text x="90" y="655" fill="rgba(255,255,255,0.28)" font-size="38" font-weight="900" font-family="serif">√Δ = b²-4ac</text>
+            <text x="1550" y="655" fill="rgba(255,255,255,0.28)" font-size="40" font-weight="900" font-family="serif">f(x) = ax+b</text>
+          </svg>
+
+          <!-- Saha Üzerindeki Yıldız 11 Kadro Dizilişi (Üstten Alta: 3 Forvet - 4 Orta Saha - 3 Defans - 1 Kaleci) -->
+          ${rowsHtml}
         </div>
       `;
 
@@ -3960,7 +4094,7 @@
       const origHtml = btn ? btn.innerHTML : '';
       if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<span>⏳ Yüksek Kalite Slaytlar Paketleniyor (ZIP)...</span>';
+        btn.innerHTML = '<span>⏳ Yüksek Kalite Slaytlar Hazırlanıyor...</span>';
       }
 
       try {
