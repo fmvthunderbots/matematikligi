@@ -832,7 +832,7 @@
           if (!leagueData.fixtures) leagueData.fixtures = {};
           if (!leagueData.results) leagueData.results = {};
           if (!leagueData.bots) leagueData.bots = [];
-          const migratedCloud = ensureGrade6AhmetAsafMigration(leagueData);
+          const migratedCloud = ensureGrade6AhmetAsafMigration(leagueData) | ensureGrade5GroupJElaRemoval(leagueData);
           const fixedAbsentCloud = ensureAbsentZeroScores(leagueData);
           Object.keys(leagueData.groups || {}).forEach(g => {
             ensureFixturesForGroup(g);
@@ -938,7 +938,7 @@
       if (!leagueData.fixtures) leagueData.fixtures = {};
       if (!leagueData.results) leagueData.results = {};
       if (!leagueData.bots) leagueData.bots = [];
-      if (ensureGrade6AhmetAsafMigration(leagueData) || ensureAbsentZeroScores(leagueData)) {
+      if ((ensureGrade6AhmetAsafMigration(leagueData) | ensureGrade5GroupJElaRemoval(leagueData)) || ensureAbsentZeroScores(leagueData)) {
         try { localStorage.setItem(getStorageKey(), JSON.stringify(leagueData)); } catch(e){}
       }
       let op = 59;
@@ -1136,6 +1136,19 @@
             <button onclick="addNewStudentToGroupPreservingW1('${g}')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-extrabold whitespace-nowrap shadow-sm cursor-pointer transition-all">Gruba Ekle</button>
           </div>
         </div>
+        <div class="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div>
+            <div class="text-sm font-extrabold text-rose-900">🚪 Öğrenci Ayrıldı: Gruptan Çıkar ve Fikstürü Yeniden Kur</div>
+            <div class="text-xs text-rose-700">Seçilen öğrenciyi gruptan çıkarır. 1. hafta maçları ve skorları aynen korunur; ayrılan öğrencinin 1. hafta rakibi, 1. haftayı BAY geçen öğrenciyle eşleşir (BAY geçen yoksa rakibi BAY geçer). Kalan haftalar yeniden kurulur.</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="departingStudent_${g}" class="bg-white border border-rose-300 rounded-lg px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-rose-500 min-w-[220px]">
+              <option value="">Ayrılan öğrenciyi seçin...</option>
+              ${(leagueData.groups[g] || []).filter(n => n && n.trim() !== '' && n !== 'BAY').map(n => `<option value="${String(n).replace(/"/g, '&quot;')}">${n}</option>`).join('')}
+            </select>
+            <button onclick="removeDepartedStudentAndRebuild('${g}')" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-lg text-sm font-extrabold whitespace-nowrap shadow-sm cursor-pointer transition-all">Çıkar ve Yeniden Kur</button>
+          </div>
+        </div>
         <div class="space-y-3">`;
       leagueData.groups[g].forEach((name, i) => {
         if (name === 'BAY') {
@@ -1199,6 +1212,136 @@
       loadGroupManager();
       alert(`✅ ${newName} başarıyla Grup ${g} listesine eklendi! 1. haftayı BAY geçmiş sayılarak 1. hafta maç sonuçları korundu ve grup fikstürü revize edildi.`);
     };
+
+    // Öğrenci ayrıldığında: 1. hafta maçlarını ve skorlarını koruyarak grubu küçültür, fikstürü yeniden kurar.
+    window.removeDepartedStudentAndRebuild = function(g, forcedName, silent) {
+      const sel = document.getElementById('departingStudent_' + g);
+      const D = forcedName || (sel ? sel.value : '');
+      if (!D) { if (!silent) alert('⚠️ Lütfen ayrılan öğrenciyi seçin.'); return false; }
+
+      const oldMembers = (leagueData.groups[g] || []).filter(n => n && n.trim() !== '' && n !== 'BAY');
+      if (!oldMembers.includes(D)) { if (!silent) alert('⚠️ Öğrenci bu grupta bulunamadı.'); return false; }
+      const newMembers = oldMembers.filter(n => n !== D);
+      if (newMembers.length < 2) { if (!silent) alert('⚠️ Grupta en az 2 öğrenci kalmalı.'); return false; }
+
+      const oldFx = (leagueData.fixtures && leagueData.fixtures[g]) || [];
+      const oldW1 = (oldFx[0] && oldFx[0].matches) ? oldFx[0].matches.filter(m => m.home !== 'BAY' && m.away !== 'BAY') : [];
+
+      // 1. hafta eşleşmeleri: ayrılanın yerine 1. haftayı BAY geçen oyuncu geçer
+      const inW1 = new Set();
+      oldW1.forEach(m => { inW1.add(m.home); inW1.add(m.away); });
+      const byePlayers = newMembers.filter(n => !inW1.has(n));
+
+      const pairs = [];
+      let replacedNote = '';
+      let carryOpp = null; // ayrılanın rakibinin 1. hafta neti yeni maça taşınır
+      oldW1.forEach(m => {
+        if (m.home === D || m.away === D) {
+          const opp = (m.home === D) ? m.away : m.home;
+          const bye = byePlayers.shift();
+          if (bye) {
+            pairs.push(m.home === D ? [bye, opp] : [opp, bye]);
+            replacedNote = `${bye} ↔ ${opp} (1. hafta, yeni maç)`;
+            const oldR = leagueData.results && leagueData.results[m.id];
+            if (oldR) {
+              const oppScore = (m.home === D) ? oldR.awayScore : oldR.homeScore;
+              if (oppScore !== '' && oppScore != null) carryOpp = { opp, bye, oppScore };
+            }
+          } else {
+            pairs.push([opp, 'BAY']);
+            replacedNote = `${opp} 1. haftayı BAY geçecek`;
+          }
+        } else {
+          pairs.push([m.home, m.away]);
+        }
+      });
+      // Eşleşmemiş kalanlar (örn. ayrılan zaten BAY geçen kişiyse) varsa çiftle / BAY ver
+      while (byePlayers.length >= 2) pairs.push([byePlayers.shift(), byePlayers.shift()]);
+      if (byePlayers.length === 1) pairs.push([byePlayers.shift(), 'BAY']);
+
+      // Daire (circle) yöntemi dizilimi: 1. hafta tam olarak bu çiftler olacak şekilde yerleştir
+      const N = pairs.length * 2;
+      const P = new Array(N);
+      pairs.forEach((pr, k) => { P[k] = pr[0]; P[N - 1 - k] = pr[1]; });
+
+      // Eski sonuçları çift bazında sakla (ayrılan öğrenciyle ilgili olanlar hariç)
+      const pairKey = (a, b) => [a, b].sort().join('___');
+      const oldByPair = {};
+      oldFx.forEach(w => (w.matches || []).forEach(m => {
+        if (m.home === D || m.away === D) return;
+        const r = leagueData.results && leagueData.results[m.id];
+        if (r) oldByPair[pairKey(m.home, m.away)] = { home: m.home, away: m.away, r };
+      }));
+
+      const lostCount = oldFx.reduce((acc, w) => acc + (w.matches || []).filter(m => (m.home === D || m.away === D) && leagueData.results && leagueData.results[m.id] && (leagueData.results[m.id].homeScore !== '' || leagueData.results[m.id].awayScore !== '')).length, 0);
+
+      const ok = silent ? true : confirm(
+        `${D} gruptan çıkarılacak ve Grup ${g} ${newMembers.length} kişiyle yeniden kurulacak.\n\n` +
+        `• 1. hafta maçları ve skorları korunacak.\n` +
+        (replacedNote ? `• Değişen 1. hafta maçı: ${replacedNote}\n` : '') +
+        `• ${D} ile oynanmış ${lostCount} maçın skoru silinecek.\n` +
+        `• Diğer haftalar yeniden kurulacak; daha önce girilmiş skorlar aynı çiftler için korunacak.\n\nDevam edilsin mi?`
+      );
+      if (!ok) return false;
+
+      // Uygula
+      Object.keys(leagueData.results || {}).forEach(k => { if (k.startsWith(g + '_')) delete leagueData.results[k]; });
+      Object.keys(leagueData.matchIndex || {}).forEach(k => { if (k.startsWith(g + '_')) delete leagueData.matchIndex[k]; });
+
+      leagueData.groups[g] = P.slice();
+      leagueData.fixtures[g] = generateFixtures(g);
+      buildMatchIndex(g);
+
+      let carried = 0;
+      leagueData.fixtures[g].forEach(w => (w.matches || []).forEach(m => {
+        const old = oldByPair[pairKey(m.home, m.away)];
+        if (!old) return;
+        const r = { ...old.r };
+        if (old.home !== m.home) { r.homeScore = old.r.awayScore; r.awayScore = old.r.homeScore; }
+        leagueData.results[m.id] = r;
+        carried++;
+      }));
+
+      // Yeni 1. hafta maçı: rakibin eski neti korunur, BAY geçen öğrencinin neti boş kalır (girilene kadar 0 sayılır)
+      if (carryOpp) {
+        const nm = leagueData.fixtures[g][0].matches.find(m => (m.home === carryOpp.bye && m.away === carryOpp.opp) || (m.home === carryOpp.opp && m.away === carryOpp.bye));
+        if (nm) {
+          leagueData.results[nm.id] = (nm.home === carryOpp.opp)
+            ? { homeScore: carryOpp.oppScore, awayScore: '' }
+            : { homeScore: '', awayScore: carryOpp.oppScore };
+        }
+      }
+
+      if (silent) return true;
+
+      saveData();
+      showStandings();
+      fillUpcomingWeekSelect();
+      showUpcoming();
+      renderMiniStandings();
+      loadGroupManager();
+      alert(`✅ ${D} gruptan çıkarıldı. Grup ${g} artık ${newMembers.length} kişi; fikstür yeniden kuruldu ve ${carried} maçın skoru korundu.` +
+        (replacedNote ? `\n\nYeni 1. hafta maçı: ${replacedNote}. Rakibin eski neti korundu; BAY geçen öğrencinin neti boş (girilene kadar 0 sayılır). Netini Sonuç Girişi bölümünden girebilirsiniz.` : ''));
+      return true;
+    };
+
+    // 5. Sınıflar J Grubu: ELA AKTAŞ ayrıldı -> grup 6 kişiye düşer, 1. hafta maçları korunur, BAY geçen ECE GÖREN ELA'nın 1. hafta rakibiyle eşleşir.
+    function ensureGrade5GroupJElaRemoval(dataObj) {
+      if (String(currentGrade) !== '5' || !dataObj || !dataObj.groups || !Array.isArray(dataObj.groups['J'])) return false;
+      const trUp = (x) => String(x || '').trim().toLocaleUpperCase('tr-TR');
+      const elaName = dataObj.groups['J'].find(n => trUp(n) === 'ELA AKTAŞ');
+      if (!elaName) return false;
+      if (!dataObj.fixtures) dataObj.fixtures = {};
+      if (!dataObj.fixtures['J'] || !dataObj.fixtures['J'].length) dataObj.fixtures['J'] = generateFixtures('J');
+      if (!dataObj.matchIndex) dataObj.matchIndex = {};
+      buildMatchIndex('J');
+      try {
+        return window.removeDepartedStudentAndRebuild('J', elaName, true) === true;
+      } catch (e) {
+        console.error('Grup J göç hatası:', e);
+        return false;
+      }
+    }
 
     function saveNameEdit(g, i) {
       const newName = normName(document.getElementById('editName_' + g + '_' + i).value);
@@ -1264,6 +1407,21 @@
       return isNaN(n) ? '' : Math.round(n * 10) / 10;
     }
 
+    // Maç sonucu kuralı:
+    //  - Skoru boş olan / 0 alan öğrenci "maça girmemiş" sayılır.
+    //  - Girmeyen öğrencinin rakibi de 0 ya da EKSİ net yaptıysa maç BERABERE (1-1) biter.
+    //  - Girmeyen öğrencinin rakibi ARTI net yaptıysa rakip kazanır.
+    //  - Diğer durumlarda yüksek net kazanır.
+    // Dönüş: 'H' (ev sahibi kazandı), 'A' (deplasman kazandı), 'D' (beraberlik)
+    function getMatchOutcome(hs, as) {
+      const h = (hs === '' || hs == null || isNaN(hs)) ? 0 : Number(hs);
+      const a = (as === '' || as == null || isNaN(as)) ? 0 : Number(as);
+      if ((h === 0 && a <= 0) || (a === 0 && h <= 0)) return 'D';
+      if (h > a) return 'H';
+      if (a > h) return 'A';
+      return 'D';
+    }
+
     // ---------- Puan Durumu ----------
     function calculateStandings(group){
       const members = (leagueData.groups[group]||[]).filter(m=>m.trim()!=='');
@@ -1288,8 +1446,9 @@
         H.wrong = Math.round((H.wrong + as) * 10) / 10; 
         A.correct = Math.round((A.correct + as) * 10) / 10; 
         A.wrong = Math.round((A.wrong + hs) * 10) / 10;
-        if (hs > as){ H.won++; H.points+=3; A.lost++; }
-        else if (hs < as){ A.won++; A.points+=3; H.lost++; }
+        const outcome = getMatchOutcome(hs, as);
+        if (outcome === 'H'){ H.won++; H.points+=3; A.lost++; }
+        else if (outcome === 'A'){ A.won++; A.points+=3; H.lost++; }
         else { H.drawn++; A.drawn++; H.points++; A.points++; }
         H.goalDifference = Math.round((H.correct - H.wrong) * 10) / 10; 
         A.goalDifference = Math.round((A.correct - A.wrong) * 10) / 10;
@@ -3425,12 +3584,12 @@
                 if (hs !== '' && !isHomeBot && !seen.has(normName(m.home))) {
                   const hk = normName(m.home);
                   seen.add(hk);
-                  playerScores.push({ name: m.home, group: g, score: hs, cumulNet: cumulNetMap[hk] ?? hs, opponent: m.away, won: (as !== '' && hs > as) });
+                  playerScores.push({ name: m.home, group: g, score: hs, cumulNet: cumulNetMap[hk] ?? hs, opponent: m.away, won: (as !== '' && getMatchOutcome(hs, as) === 'H') });
                 }
                 if (as !== '' && !isAwayBot && !seen.has(normName(m.away))) {
                   const ak = normName(m.away);
                   seen.add(ak);
-                  playerScores.push({ name: m.away, group: g, score: as, cumulNet: cumulNetMap[ak] ?? as, opponent: m.home, won: (hs !== '' && as > hs) });
+                  playerScores.push({ name: m.away, group: g, score: as, cumulNet: cumulNetMap[ak] ?? as, opponent: m.home, won: (hs !== '' && getMatchOutcome(hs, as) === 'A') });
                 }
               });
             }
@@ -3643,8 +3802,9 @@
         const p1Score = isPlayed ? formatNet(s1) : '-';
         const p2Score = isPlayed ? formatNet(s2) : '-';
 
-        const isP1Winner = isPlayed && (parseFloat(s1) > parseFloat(s2));
-        const isP2Winner = isPlayed && (parseFloat(s2) > parseFloat(s1));
+        const outcomeTv = isPlayed ? getMatchOutcome(parseFloat(s1), parseFloat(s2)) : null;
+        const isP1Winner = outcomeTv === 'H';
+        const isP2Winner = outcomeTv === 'A';
 
         return `
           <div style="background:rgba(15, 23, 42, 0.75); border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:18px 24px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 8px 16px rgba(0,0,0,0.3); min-height:110px;">
