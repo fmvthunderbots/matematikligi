@@ -31,6 +31,8 @@
 
   <!-- html2canvas & JSZip (TV Dijital Pano Görsel Oluşturucu) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- html-to-image: tarayıcının kendi motoruyla birebir görsel üretir (ön izlemeyle aynı sonuç). Yüklenemezse html2canvas devreye girer. -->
+  <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
   <style>
@@ -4048,6 +4050,41 @@
       return wrapTvSlideHtml(mainTitle, subTitle, 1, 1, content);
     }
 
+    // TV slaytını PNG canvas'ına çevirir.
+    // 1. tercih: html-to-image (tarayıcı motoru -> ön izlemeyle birebir aynı).
+    // 2. yedek: html2canvas (kendi çizim motoru; metin/gradyan konumunda sapma yapabilir).
+    async function renderTvSlideToCanvas(renderContainer) {
+      try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) {}
+      const slideEl = renderContainer.firstElementChild;
+      if (window.htmlToImage && slideEl) {
+        try {
+          const canvas = await window.htmlToImage.toCanvas(slideEl, {
+            width: 1920,
+            height: 1080,
+            canvasWidth: 1920,
+            canvasHeight: 1080,
+            pixelRatio: 2,
+            backgroundColor: '#090d16',
+            cacheBust: true,
+            style: { transform: 'none', margin: '0' },
+            imagePlaceholder: 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+          });
+          if (canvas && canvas.width > 0 && canvas.height > 0) return canvas;
+        } catch (e) {
+          console.warn('html-to-image başarısız, html2canvas yedeği kullanılıyor:', e);
+        }
+      }
+      return await html2canvas(renderContainer, {
+        scale: 2,
+        width: 1920,
+        height: 1080,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#090d16',
+        logging: false
+      });
+    }
+
     window.downloadCurrentTvSlide = async function() {
       if (!currentTvSlides.length) return;
       const btn = document.getElementById('btnDownloadSingleTv');
@@ -4064,15 +4101,7 @@
 
         await new Promise(r => setTimeout(r, 120));
 
-        const canvas = await html2canvas(renderContainer, {
-          scale: 2, // 2x Ultra HD Crisp Render (3840x2160 High DPI)
-          width: 1920,
-          height: 1080,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#090d16',
-          logging: false
-        });
+        const canvas = await renderTvSlideToCanvas(renderContainer);
 
         const now = new Date();
         const dateFormatted = `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
@@ -4118,15 +4147,7 @@
           renderContainer.innerHTML = currentTvSlides[i];
           await new Promise(r => setTimeout(r, 120));
 
-          const canvas = await html2canvas(renderContainer, {
-            scale: 2, // 2x Ultra HD Crisp Render
-            width: 1920,
-            height: 1080,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#090d16',
-            logging: false
-          });
+          const canvas = await renderTvSlideToCanvas(renderContainer);
 
           const dataUrl = canvas.toDataURL('image/png');
           const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
